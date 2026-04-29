@@ -1,0 +1,72 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/HUD.gd" id="1_hud_script"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_hud_script")
+
+[node name="TopLeft" type="Control" parent="."]
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 240.0
+offset_bottom = 72.0
+
+[node name="VBox" type="VBoxContainer" parent="TopLeft"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+theme_override_constants/separation = 6
+
+[node name="HPRow" type="HBoxContainer" parent="TopLeft/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HPLabel" type="Label" parent="TopLeft/VBox/HPRow"]
+text = "HP"
+vertical_alignment = 1
+
+[node name="HPBar" type="ProgressBar" parent="TopLeft/VBox/HPRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(140, 16)
+show_percentage = false
+value = 5.0
+
+[node name="HPText" type="Label" parent="TopLeft/VBox/HPRow"]
+unique_name_in_owner = true
+text = "5 / 5"
+vertical_alignment = 1
+
+[node name="LivesText" type="Label" parent="TopLeft/VBox"]
+unique_name_in_owner = true
+text = "Lives: 3"
+
+[node name="WaveText" type="Label" parent="TopLeft/VBox"]
+unique_name_in_owner = true
+text = "Wave: 1"
+
+[node name="BossBanner" type="Label" parent="."]
+visible = false
+unique_name_in_owner = true
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -24.0
+offset_right = 160.0
+offset_bottom = 24.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 32
+text = "BOSS WAVE"
+

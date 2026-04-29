@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/EnemyTank.gd" id="1_tank_script"]
+
+[sub_resource type="CircleShape2D" id="1_circle"]
+radius = 20.0
+
+[node name="EnemyTank" type="Area2D"]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_tank_script")
+hp = 18
+speed = 75.0
+horizontal_speed = 52.0
+shot_interval = 1.35
+bullet_speed = 180.0
+bullet_damage = 3
+radius = 20.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("1_circle")

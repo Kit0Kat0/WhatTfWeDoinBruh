@@ -5,6 +5,11 @@ class_name BulletEnemy
 @export var radius: float = 5.0
 
 var velocity: Vector2 = Vector2.ZERO
+var damage: int = 1
+var wave_axis: Vector2 = Vector2.ZERO
+var wave_amplitude: float = 0.0
+var wave_frequency: float = 0.0
+var wave_phase: float = 0.0
 var _t: float = 0.0
 
 
@@ -14,8 +19,14 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	var old_t: float = _t
 	global_position += velocity * delta
-	_t += delta
+	_t = old_t + delta
+	if wave_amplitude > 0.0 and wave_frequency > 0.0 and wave_axis.length_squared() > 0.0:
+		var prev_wave: float = sin(old_t * wave_frequency + wave_phase)
+		var next_wave: float = sin(_t * wave_frequency + wave_phase)
+		global_position += wave_axis.normalized() * ((next_wave - prev_wave) * wave_amplitude)
+
 	if _t >= ttl:
 		queue_free()
 		return

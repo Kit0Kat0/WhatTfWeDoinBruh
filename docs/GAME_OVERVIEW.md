@@ -16,9 +16,12 @@
 
 ## Current prototype slice
 
-- Player movement + focus + shooting
-- Enemy spawner
-- Basic enemy that fires a ring pattern
+- Player movement + focus + boost + shooting
+- Player HP with top-left HUD bar
+- Player respawn loop (3 lives) with short post-respawn immunity
+- Wave-based enemy spawner with short inter-wave delay
+- Mixed enemy archetypes (normal, tank, speedster) with distinct HP/speed/fire-rate/damage profiles
+- Boss encounter every 10 waves
 
 ## Tech / tools
 

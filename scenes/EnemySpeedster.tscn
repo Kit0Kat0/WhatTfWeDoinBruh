@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/EnemySpeedster.gd" id="1_speedster_script"]
+
+[sub_resource type="CircleShape2D" id="1_circle"]
+radius = 10.0
+
+[node name="EnemySpeedster" type="Area2D"]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_speedster_script")
+hp = 4
+speed = 170.0
+horizontal_speed = 150.0
+shot_interval = 0.5
+bullet_speed = 260.0
+bullet_damage = 1
+use_wave_bullets = false
+radius = 10.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("1_circle")
