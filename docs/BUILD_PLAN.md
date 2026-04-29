@@ -2,8 +2,6 @@
 
 This document is the **single roadmap** for one coordinated build pass. Follow it **in order** unless a step is explicitly marked optional.
 
-**Session log:** see [`SESSION_LOG.md`](SESSION_LOG.md) — append when resolving non-trivial bugs or making decisions that future sessions shouldn’t re-derive.
-
 ---
 
 ## Principles for this pass
