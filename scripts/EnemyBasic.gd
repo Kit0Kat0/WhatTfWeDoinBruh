@@ -1,16 +1,17 @@
 extends Area2D
+class_name EnemyBasic
 
-@export var hp := 8
-@export var speed := 110.0
-@export var radius := 14.0
+@export var hp: int = 8
+@export var speed: float = 110.0
+@export var radius: float = 14.0
 
 var playfield_rect: Rect2
 var bullet_scene: PackedScene
 var bullet_parent: Node
 
-var _shot_t := 0.0
-var _shot_interval := 0.85
-var _rng := RandomNumberGenerator.new()
+var _shot_t: float = 0.0
+var _shot_interval: float = 0.85
+var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 
 func _ready() -> void:
@@ -37,15 +38,17 @@ func _fire_ring() -> void:
 	if bullet_scene == null or bullet_parent == null:
 		return
 
-	var count := 12
-	var base_angle := _rng.randf_range(0.0, TAU)
+	var count: int = 12
+	var base_angle: float = _rng.randf_range(0.0, TAU)
 	for i in count:
-		var a := base_angle + (TAU * float(i) / float(count))
-		var v := Vector2.RIGHT.rotated(a) * 220.0
-		var b := bullet_scene.instantiate()
+		var a: float = base_angle + (TAU * float(i) / float(count))
+		var v: Vector2 = Vector2.RIGHT.rotated(a) * 220.0
+		var b: BulletEnemy = bullet_scene.instantiate() as BulletEnemy
+		if b == null:
+			continue
 		bullet_parent.add_child(b)
 		b.global_position = global_position
-		b.set("velocity", v)
+		b.velocity = v
 
 
 func _draw() -> void:

@@ -10,7 +10,6 @@ Use this file as a **cold-start** reference when picking up work on this bullet-
 ## Engine / version
 
 - **Godot:** **4.6.2** (team version)
-- Project file: `E:\WhatTfWeDoin\project.godot`
 
 ## Repo layout (current)
 
@@ -34,16 +33,6 @@ Prototype gameplay slice currently lives in:
 - **Shoot**: Space / Joypad A
 - **Focus**: Shift / Joypad LB
 
-## Git (Windows gotcha)
-
-If Git errors with **“detected dubious ownership”** on this drive, fix once with:
-
-```powershell
-git config --global --add safe.directory E:/WhatTfWeDoin
-```
-
-(This is a Git safety feature on some Windows filesystem setups.)
-
 ## Working conventions (recommended)
 
 - **Small commits**: one feature/fix at a time; keep commits reviewable.
@@ -53,10 +42,11 @@ git config --global --add safe.directory E:/WhatTfWeDoin
 
 ## Session log (recommended)
 
-Add a lightweight running log at `docs/SESSION_LOG.md` once the project grows:
+Add to the running log at `docs/SESSION_LOG.md` for every change:
 
 - What changed
 - Why
 - Any pitfalls / fixes
 - Next actionable steps
 
+The format should be have a header to denote the date of the change and include the name of the github username and a bullet point list to show what was changed

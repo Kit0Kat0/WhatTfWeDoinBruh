@@ -1,16 +1,17 @@
 extends Area2D
+class_name Player
 
-@export var speed := 420.0
-@export var focus_speed_multiplier := 0.45
-@export var fire_interval := 0.08
-@export var i_frames := 0.8
+@export var speed: float = 420.0
+@export var focus_speed_multiplier: float = 0.45
+@export var fire_interval: float = 0.08
+@export var i_frames: float = 0.8
 
 var playfield_rect: Rect2
 var bullet_scene: PackedScene
 var bullet_parent: Node
 
-var _fire_cooldown := 0.0
-var _invuln := 0.0
+var _fire_cooldown: float = 0.0
+var _invuln: float = 0.0
 
 
 func _ready() -> void:
@@ -26,18 +27,18 @@ func _process(delta: float) -> void:
 
 
 func _update_movement(delta: float) -> void:
-	var dir := Vector2(
+	var dir: Vector2 = Vector2(
 		Input.get_action_strength("move_right") - Input.get_action_strength("move_left"),
 		Input.get_action_strength("move_down") - Input.get_action_strength("move_up")
 	)
 	if dir.length_squared() > 1.0:
 		dir = dir.normalized()
 
-	var mult := focus_speed_multiplier if Input.is_action_pressed("focus") else 1.0
+	var mult: float = focus_speed_multiplier if Input.is_action_pressed("focus") else 1.0
 	global_position += dir * speed * mult * delta
 
 	if playfield_rect.size != Vector2.ZERO:
-		var margin := 14.0
+		var margin: float = 14.0
 		global_position.x = clampf(global_position.x, playfield_rect.position.x + margin, playfield_rect.end.x - margin)
 		global_position.y = clampf(global_position.y, playfield_rect.position.y + margin, playfield_rect.end.y - margin)
 
@@ -53,14 +54,16 @@ func _update_shooting(delta: float) -> void:
 
 	_fire_cooldown = fire_interval
 
-	var b := bullet_scene.instantiate()
+	var b: BulletPlayer = bullet_scene.instantiate() as BulletPlayer
+	if b == null:
+		return
 	bullet_parent.add_child(b)
 	b.global_position = global_position + Vector2(0, -16)
-	b.set("velocity", Vector2(0, -900.0))
+	b.velocity = Vector2(0, -900.0)
 
 
 func _draw() -> void:
-	var base := Color(0.35, 0.8, 1.0, 1.0)
+	var base: Color = Color(0.35, 0.8, 1.0, 1.0)
 	if _invuln > 0.0:
 		base.a = 0.35
 
@@ -77,4 +80,3 @@ func _on_area_entered(area: Area2D) -> void:
 	if area.is_in_group(Defs.GROUP_ENEMY_BULLET) or area.is_in_group(Defs.GROUP_ENEMY):
 		_invuln = i_frames
 		queue_redraw()
-

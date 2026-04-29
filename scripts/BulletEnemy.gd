@@ -1,10 +1,11 @@
 extends Area2D
+class_name BulletEnemy
 
-@export var ttl := 6.0
-@export var radius := 5.0
+@export var ttl: float = 6.0
+@export var radius: float = 5.0
 
-var velocity := Vector2.ZERO
-var _t := 0.0
+var velocity: Vector2 = Vector2.ZERO
+var _t: float = 0.0
 
 
 func _ready() -> void:
@@ -19,7 +20,7 @@ func _process(delta: float) -> void:
 		queue_free()
 		return
 
-	var view := get_viewport_rect()
+	var view: Rect2 = get_viewport_rect()
 	if not view.grow(120.0).has_point(global_position):
 		queue_free()
 
