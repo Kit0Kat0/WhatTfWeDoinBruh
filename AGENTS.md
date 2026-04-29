@@ -42,11 +42,13 @@ Prototype gameplay slice currently lives in:
 
 ## Session log (recommended)
 
-Add to a new running log at `logs/SESSION {date} ({username}).md` for every change in a session:
+Add to a new running log at `logs/SESSION {date} ({username}).md` for every change in a session
 
+Each bullet point should be a header with a list or paragraph below it
 - What changed
 - Why
 - Any pitfalls / fixes
+- Any thing important to mention if another AI agent were to move forward (should not include instructions to continue using the same log file)
 
 The format should be have a header to denote the date of the change and include the name of the github username and a bullet point list to show what was changed
 
