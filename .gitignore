@@ -26,3 +26,16 @@ Desktop.ini
 **/Free Assets*.url
 **/*.url
 **/*.pdf
+
+# Track third-party asset drops (keep them commit-able)
+!Assets/
+!Assets/**
+
+# ...but still ignore generated/junk inside Assets/
+Assets/**/*.import
+Assets/**/__MACOSX/
+Assets/**/.DS_Store
+Assets/**/COUPON.*
+Assets/**/Free Assets*.url
+Assets/**/*.url
+Assets/**/*.pdf
