@@ -1,0 +1,18 @@
+# Godot cache/import data
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+
+# Mono/.NET
+.mono/
+data_*/
+
+# IDE/editor files
+.vscode/
+.idea/
+*.code-workspace
+
+# OS files
+Thumbs.db
+Desktop.ini
