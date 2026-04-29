@@ -42,11 +42,12 @@ Prototype gameplay slice currently lives in:
 
 ## Session log (recommended)
 
-Add to the running log at `docs/SESSION_LOG.md` for every change:
+Add to a new running log at `logs/SESSION {date} ({username}).md` for every change in a session:
 
 - What changed
 - Why
 - Any pitfalls / fixes
-- Next actionable steps
 
 The format should be have a header to denote the date of the change and include the name of the github username and a bullet point list to show what was changed
+
+The date format should be mm/dd/yy
