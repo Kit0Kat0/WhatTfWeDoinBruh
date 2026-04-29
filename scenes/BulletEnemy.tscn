@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/BulletEnemy.gd" id="1_bullet_enemy_script"]
+
+[sub_resource type="CircleShape2D" id="1_circle"]
+radius = 5.0
+
+[node name="BulletEnemy" type="Area2D"]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("1_bullet_enemy_script")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("1_circle")
+
