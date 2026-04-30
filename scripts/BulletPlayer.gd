@@ -11,7 +11,6 @@ var _t: float = 0.0
 func _ready() -> void:
 	add_to_group(Defs.GROUP_PLAYER_BULLET)
 	area_entered.connect(_on_area_entered)
-	queue_redraw()
 
 
 func _process(delta: float) -> void:
@@ -24,10 +23,6 @@ func _process(delta: float) -> void:
 	var view: Rect2 = get_viewport_rect()
 	if global_position.y < view.position.y - 40.0:
 		queue_free()
-
-
-func _draw() -> void:
-	draw_circle(Vector2.ZERO, radius, Color(0.8, 1.0, 0.9, 1.0))
 
 
 func _on_area_entered(area: Area2D) -> void:
