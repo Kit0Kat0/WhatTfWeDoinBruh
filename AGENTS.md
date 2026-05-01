@@ -25,7 +25,23 @@ Prototype gameplay slice currently lives in:
 - `scenes/EnemySpawner.tscn`, `scripts/EnemySpawner.gd`
 - `scenes/BulletPlayer.tscn`, `scripts/BulletPlayer.gd`
 - `scenes/BulletEnemy.tscn`, `scripts/BulletEnemy.gd`
+- HUD: `scenes/HUD.tscn`, `scripts/HUD.gd`
+- One-shot VFX example: `scenes/VFX/MuzzleFlash.tscn`, `scripts/VfxOneShot.gd`
 - Shared constants: `scripts/Defs.gd`
+
+## Documentation (humans + agents)
+
+- **Design / roadmap:** `docs/GAME_OVERVIEW.md`, `docs/BUILD_PLAN.md`
+- **Technical session history (symptoms → fixes):** `docs/SESSION_LOG.md`
+- **Per-session notes:** `logs/SESSION {date} ({username}).md` (see below)
+- **Third-party credits:** `docs/SESSION_LOG.md` points at `ASSET_ATTRIBUTION.md` when that file exists in the tree; otherwise check README/license files inside `Assets/` pack folders.
+
+## Art / VFX workflow
+
+- **Player frames:** curated PNGs under `art/player/` (e.g. `player_frame_0.png` …). If Godot complains about `preload` on raw PNGs in a given setup, `scripts/Player.gd` uses **runtime** `Image.load` → `ImageTexture.create_from_image` for those paths.
+- **Large FX atlases** (e.g. `Assets/Effect and FX Pixel All Free/...`): do **not** use the whole PNG as one sprite; use a `Sprite2D` + **`AtlasTexture`** with an explicit **`Rect2`** region for one cell/effect.
+  - **Example (enemy bullet):** `scenes/BulletEnemy.tscn` crops `.../Free/Part 1/03.png` at **`Rect2(576, 0, 64, 64)`**. Adjust the rect or pick a neighbor cell if density/readability suffers; simpler fallback sprites live under `Assets/Craftpix/Projectiles/` if needed.
+- **Direction:** keep raw packs in `Assets/`; promote stable, reused VFX into a dedicated `vfx/` (or similar) once scenes/resources are authored around them.
 
 ## Controls (prototype)
 
