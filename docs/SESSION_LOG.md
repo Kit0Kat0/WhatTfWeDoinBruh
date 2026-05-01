@@ -9,6 +9,7 @@
 ## Agent pickup (read this on a cold start)
 
 - **Repo root (authoritative):** `E:\WhatTfWeDoin`
+- **Cold-start index:** `AGENTS.md` (layout, docs map, art/VFX workflow).
 - **Godot:** 4.6.2
 - **Main scene:** `res://scenes/Game.tscn`
 - **Current playable slice:** Player (move/focus/shoot), wave-based spawner, forward-firing enemies, bullets, HP/lives HUD.
@@ -155,6 +156,14 @@
 - **Cause:** Wrong asset family for “clean orb” reads + atlases need explicit crop rects (not whole-file textures).
 - **Fix:** Switched `BulletEnemy` to render a `Sprite2D` using an `AtlasTexture` subresource cut from `Assets/Effect and FX Pixel All Free/Free/Part 1/03.png` (`Rect2(576, 0, 64, 64)`), scaled/tinted for readability; removed debug `_draw()` circles from enemy bullets.
 - **Files:** `scenes/BulletEnemy.tscn`, `scripts/BulletEnemy.gd`.
+
+### AGENTS cold-start: docs map + VFX workflow (04/30/26)
+
+- **Prompt:** Extend `AGENTS.md` so it matches how the repo documents work and how FX atlases are used.
+- **Symptom:** `AGENTS.md` listed scenes but not where design/roadmap/session logs live, nor the `AtlasTexture` / `art/player` conventions agents hit in practice.
+- **Cause:** Cold-start file lagged behind `docs/*` and recent presentation work.
+- **Fix:** Added **Documentation**, **Art / VFX workflow**, and prototype pointers (HUD, muzzle VFX); clarified attribution when `ASSET_ATTRIBUTION.md` is absent.
+- **Files:** `AGENTS.md`, `docs/SESSION_LOG.md` (pickup line), `logs/SESSION 04-30-26 (ZavHar).md`.
 
 ---
 
