@@ -13,7 +13,7 @@
 - **Main scene:** `res://scenes/Game.tscn`
 - **Current playable slice:** Player (move/focus/shoot), wave-based spawner, forward-firing enemies, bullets, HP/lives HUD.
 - **Asset tracking:** see `ASSET_ATTRIBUTION.md`
-- **FX isolation convention:** keep raw packs in `Assets/`; copy curated game-ready VFX into `vfx/` (textures/resources/scenes) when we start authoring reusable effects.
+- **FX isolation convention:** keep raw packs in `Assets/`; for big FX atlases, isolate a single effect using `AtlasTexture` + a fixed `Rect2` cell (example: enemy bullets use `Effect and FX Pixel All Free/Free/Part 1/03.png` @ `Rect2(576, 0, 64, 64)`). Long-term, still prefer copying curated authored VFX into `vfx/` once we start building reusable scenes/resources.
 
 ---
 
@@ -147,6 +147,14 @@
 - **Cause:** Normal enemy wave-bullet mode remained enabled from prior trajectory update.
 - **Fix:** Disabled wave bullet mode for normal enemies and restored normal straight-shot speed.
 - **Files:** `scripts/EnemyBasic.gd`.
+
+### Enemy projectile visuals via FX atlas isolation (04/30/26)
+
+- **Prompt:** Improve enemy projectile visuals; prefer circular “virus orb” reads; learn how to isolate particles from large FX sheets.
+- **Symptom:** `Projectiles/` sprites often read like weapon parts; `Effect and FX Pixel All Free` PNGs are huge multi-effect atlases.
+- **Cause:** Wrong asset family for “clean orb” reads + atlases need explicit crop rects (not whole-file textures).
+- **Fix:** Switched `BulletEnemy` to render a `Sprite2D` using an `AtlasTexture` subresource cut from `Assets/Effect and FX Pixel All Free/Free/Part 1/03.png` (`Rect2(576, 0, 64, 64)`), scaled/tinted for readability; removed debug `_draw()` circles from enemy bullets.
+- **Files:** `scenes/BulletEnemy.tscn`, `scripts/BulletEnemy.gd`.
 
 ---
 

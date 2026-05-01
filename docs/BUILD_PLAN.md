@@ -78,6 +78,11 @@ This document is the **single roadmap** for one coordinated build pass. Follow i
 - Use the committed `Assets/` packs for player/enemy bullets and hit VFX
 - Add parallax background
 
+### Status (rolling)
+
+- **Started:** enemy bullets now use an **`AtlasTexture` crop** from `Assets/Effect and FX Pixel All Free/Free/Part 1/03.png` (`Rect2(576, 0, 64, 64)`) instead of debug draw circles.
+- **Next:** hit/kill VFX, enemy-specific bullet variants (duplicate `BulletEnemy` scenes or swap atlas regions per enemy).
+
 ---
 
 ## Maintenance

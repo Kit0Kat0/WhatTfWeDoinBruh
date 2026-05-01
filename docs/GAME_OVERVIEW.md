@@ -22,6 +22,7 @@
 - Wave-based enemy spawner with short inter-wave delay
 - Mixed enemy archetypes (normal, tank, speedster) with distinct HP/speed/fire-rate/damage profiles
 - Boss encounter every 10 waves
+- Player + enemy bullets are now **sprite-driven** (enemy bullets use an `AtlasTexture` crop from the `Effect and FX Pixel All Free` sheets)
 
 ## Tech / tools
 
