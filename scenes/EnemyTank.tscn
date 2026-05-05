@@ -16,6 +16,7 @@ shot_interval = 1.35
 bullet_speed = 180.0
 bullet_damage = 3
 radius = 20.0
+shot_sfx_id = "enemy_tank_shot"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1_circle")

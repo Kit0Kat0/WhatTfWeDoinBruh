@@ -17,6 +17,7 @@ bullet_speed = 260.0
 bullet_damage = 1
 use_wave_bullets = false
 radius = 10.0
+shot_sfx_id = "enemy_speedster_shot"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1_circle")

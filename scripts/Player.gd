@@ -5,8 +5,14 @@ class_name Player
 @export var focus_speed_multiplier: float = 0.45
 @export var boost_speed_multiplier: float = 1.6
 @export var fire_interval: float = 0.08
+@export var beam_fire_interval: float = 0.42
+@export var beam_damage: int = 3
+@export var straight_row_spacing: float = 11.0
+@export var weapon_perk_duration_sec: float = 45.0
 @export var i_frames: float = 0.8
 @export var max_hp: int = 25
+
+enum WeaponMode { SINGLE, DOUBLE_STRAIGHT, TRIPLE_STRAIGHT, BEAM }
 @export var muzzle_flash_scene: PackedScene = preload("res://scenes/VFX/MuzzleFlash.tscn")
 @export var move_anim_fps: float = 12.0
 
@@ -18,6 +24,8 @@ var bullet_scene: PackedScene
 var bullet_parent: Node
 
 var hp: int = 25
+var weapon_mode: WeaponMode = WeaponMode.SINGLE
+var _weapon_perk_time_left: float = 0.0
 var _fire_cooldown: float = 0.0
 var _invuln: float = 0.0
 var _respawn_immunity: float = 0.0
@@ -48,18 +56,25 @@ func _ready() -> void:
 func _load_move_frames() -> Array[Texture2D]:
 	var out: Array[Texture2D] = []
 	for p in _move_frame_paths:
-		var img := Image.new()
-		var err := img.load(p)
-		if err != OK:
+		var res: Resource = load(p)
+		var as_tex: Texture2D = res as Texture2D
+		if as_tex != null:
+			out.append(as_tex)
 			continue
-		var tex := ImageTexture.create_from_image(img)
-		out.append(tex)
+		var img := Image.new()
+		if img.load(p) != OK:
+			continue
+		out.append(ImageTexture.create_from_image(img))
 	return out
 
 
 func _process(delta: float) -> void:
+	var prev_respawn_immunity: float = _respawn_immunity
 	_invuln = maxf(0.0, _invuln - delta)
 	_respawn_immunity = maxf(0.0, _respawn_immunity - delta)
+	if prev_respawn_immunity > 0.0 and _respawn_immunity <= 0.0:
+		AudioManager.play_sfx("player_respawn_out")
+	_update_weapon_perk_timer(delta)
 	_update_movement(delta)
 	_update_shooting(delta)
 	_update_sprite_anim(delta)
@@ -115,26 +130,97 @@ func _update_sprite_anim(delta: float) -> void:
 
 
 
+func _update_weapon_perk_timer(delta: float) -> void:
+	if weapon_mode == WeaponMode.SINGLE:
+		_weapon_perk_time_left = 0.0
+		return
+	_weapon_perk_time_left -= delta
+	if _weapon_perk_time_left <= 0.0:
+		_weapon_perk_time_left = 0.0
+		weapon_mode = WeaponMode.SINGLE
+
+
+func _fire_interval_for_weapon() -> float:
+	if weapon_mode == WeaponMode.BEAM:
+		return beam_fire_interval
+	return fire_interval
+
+
 func _update_shooting(delta: float) -> void:
 	_fire_cooldown = maxf(0.0, _fire_cooldown - delta)
 	if _respawn_immunity > 0.0:
 		return
-	if not Input.is_action_pressed("shoot"):
+	var wants_to_shoot: bool = Input.is_action_pressed("shoot") or GameSettings.automatic_shooting
+	if not wants_to_shoot:
 		return
 	if _fire_cooldown > 0.0:
 		return
 	if bullet_scene == null or bullet_parent == null:
 		return
 
-	_fire_cooldown = fire_interval
+	_fire_cooldown = _fire_interval_for_weapon()
 
+	var muzzle_pos: Vector2 = global_position + Vector2(0.0, -16.0)
+	match weapon_mode:
+		WeaponMode.SINGLE:
+			_spawn_player_bullet(Vector2.ZERO, false, false)
+		WeaponMode.DOUBLE_STRAIGHT:
+			_spawn_player_bullet(Vector2(-straight_row_spacing, 0.0), false, false)
+			_spawn_player_bullet(Vector2(straight_row_spacing, 0.0), false, false)
+		WeaponMode.TRIPLE_STRAIGHT:
+			_spawn_player_bullet(Vector2(-straight_row_spacing * 1.4, 0.0), false, false)
+			_spawn_player_bullet(Vector2.ZERO, false, false)
+			_spawn_player_bullet(Vector2(straight_row_spacing * 1.4, 0.0), false, false)
+		WeaponMode.BEAM:
+			_spawn_player_bullet(Vector2.ZERO, true, true)
+	_spawn_muzzle_flash(muzzle_pos)
+	AudioManager.play_sfx("player_shot")
+
+
+func _spawn_player_bullet(offset_from_center: Vector2, use_pierce: bool, as_beam: bool) -> void:
 	var b: BulletPlayer = bullet_scene.instantiate() as BulletPlayer
 	if b == null:
 		return
 	bullet_parent.add_child(b)
-	b.global_position = global_position + Vector2(0, -16)
-	b.velocity = Vector2(0, -900.0)
-	_spawn_muzzle_flash(b.global_position)
+	b.global_position = global_position + offset_from_center + Vector2(0.0, -16.0)
+	b.velocity = Vector2(0.0, -900.0)
+	b.pierce = use_pierce or as_beam
+	b.damage = maxi(1, beam_damage) if as_beam else 1
+	if as_beam:
+		b.configure_as_beam()
+
+
+func has_active_weapon_perk() -> bool:
+	return weapon_mode != WeaponMode.SINGLE
+
+
+func get_weapon_perk_kind() -> WeaponPickup.PerkKind:
+	match weapon_mode:
+		WeaponMode.DOUBLE_STRAIGHT:
+			return WeaponPickup.PerkKind.DOUBLE_STRAIGHT
+		WeaponMode.TRIPLE_STRAIGHT:
+			return WeaponPickup.PerkKind.TRIPLE_STRAIGHT
+		WeaponMode.BEAM:
+			return WeaponPickup.PerkKind.BEAM
+		_:
+			return WeaponPickup.PerkKind.DOUBLE_STRAIGHT
+
+
+func refresh_weapon_perk_timer() -> void:
+	if weapon_mode == WeaponMode.SINGLE:
+		return
+	_weapon_perk_time_left = maxf(0.0, weapon_perk_duration_sec)
+
+
+func apply_weapon_pickup(kind: WeaponPickup.PerkKind) -> void:
+	match kind:
+		WeaponPickup.PerkKind.DOUBLE_STRAIGHT:
+			weapon_mode = WeaponMode.DOUBLE_STRAIGHT
+		WeaponPickup.PerkKind.TRIPLE_STRAIGHT:
+			weapon_mode = WeaponMode.TRIPLE_STRAIGHT
+		WeaponPickup.PerkKind.BEAM:
+			weapon_mode = WeaponMode.BEAM
+	_weapon_perk_time_left = maxf(0.0, weapon_perk_duration_sec)
 
 
 func _spawn_muzzle_flash(at_pos: Vector2) -> void:
@@ -181,14 +267,21 @@ func _take_damage(amount: int) -> void:
 	health_changed.emit(hp, max_hp)
 	queue_redraw()
 	if hp <= 0:
+		AudioManager.play_sfx("player_death")
+		AudioManager.duck_music(6.0, 0.3, 0.7)
 		died.emit()
 		queue_free()
+	else:
+		AudioManager.play_sfx("player_hit")
 
 
 func reset_for_respawn(respawn_immunity_duration: float) -> void:
+	weapon_mode = WeaponMode.SINGLE
+	_weapon_perk_time_left = 0.0
 	hp = max_hp
 	_invuln = 0.0
 	_respawn_immunity = maxf(0.0, respawn_immunity_duration)
 	_fire_cooldown = fire_interval
 	health_changed.emit(hp, max_hp)
 	queue_redraw()
+	AudioManager.play_sfx("player_respawn_in")

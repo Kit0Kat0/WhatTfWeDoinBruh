@@ -11,6 +11,7 @@ class_name EnemyBasic
 @export var wave_amplitude: float = 26.0
 @export var wave_frequency: float = 7.0
 @export var radius: float = 14.0
+@export var shot_sfx_id: String = "enemy_normal_shot"
 
 var playfield_rect: Rect2
 var bullet_scene: PackedScene
@@ -70,6 +71,8 @@ func _fire_forward() -> void:
 		b.wave_amplitude = wave_amplitude
 		b.wave_frequency = wave_frequency
 		b.wave_phase = _rng.randf_range(0.0, TAU)
+	if shot_sfx_id != "":
+		AudioManager.play_sfx(shot_sfx_id)
 
 
 func _draw() -> void:
@@ -79,7 +82,22 @@ func _draw() -> void:
 
 func _on_area_entered(area: Area2D) -> void:
 	if area.is_in_group(Defs.GROUP_PLAYER_BULLET):
-		hp -= 1
+		var dmg: int = 1
+		var pb: BulletPlayer = area as BulletPlayer
+		if pb != null:
+			dmg = maxi(1, pb.damage)
+		hp -= dmg
 		if hp <= 0:
+			AudioManager.play_sfx("enemy_kill")
+			_try_spawn_weapon_pickup_drop(false)
 			queue_free()
+		else:
+			AudioManager.play_sfx("enemy_hit")
+
+
+func _try_spawn_weapon_pickup_drop(from_boss: bool) -> void:
+	for n in get_tree().get_nodes_in_group("game_controller"):
+		if n.has_method("try_spawn_weapon_pickup"):
+			n.call("try_spawn_weapon_pickup", global_position, from_boss)
+			return
 

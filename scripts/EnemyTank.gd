@@ -24,6 +24,9 @@ func _fire_forward() -> void:
 		b.velocity = d * bullet_speed
 		b.damage = maxi(1, bullet_damage)
 
+	if shot_sfx_id != "":
+		AudioManager.play_sfx(shot_sfx_id)
+
 
 func _draw() -> void:
 	draw_circle(Vector2.ZERO, radius, Color(0.45, 0.8, 0.35, 1.0))

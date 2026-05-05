@@ -7,7 +7,7 @@ class_name EnemySpawner
 @export var base_enemies_per_wave: int = 6
 @export var enemies_per_wave_growth: int = 2
 @export var inter_wave_delay: float = 2.0
-@export var boss_every_n_waves: int = 10
+@export var boss_every_n_waves: int = 7
 signal wave_started(wave_number: int, enemy_target: int, is_boss_wave: bool)
 
 var playfield_rect: Rect2
@@ -147,13 +147,17 @@ func _spawn_boss() -> void:
 	var b: EnemyBoss = boss_scene.instantiate() as EnemyBoss
 	if b == null:
 		return
+	b.playfield_rect = playfield_rect
+	b.bullet_scene = enemy_bullet_scene
+	b.bullet_parent = enemy_bullet_parent
 	enemy_parent.add_child(b)
 	b.tree_exited.connect(_on_enemy_exited)
 	_spawned_this_wave += 1
 	_alive_this_wave += 1
 
-	b.global_position = Vector2(playfield_rect.size.x * 0.5, playfield_rect.position.y - 80.0)
-	b.playfield_rect = playfield_rect
-	b.bullet_scene = enemy_bullet_scene
-	b.bullet_parent = enemy_bullet_parent
+	# Spawn above the playfield so the boss can slide into the top lane; offset scales with boss size.
+	b.global_position = Vector2(
+		playfield_rect.position.x + playfield_rect.size.x * 0.5,
+		playfield_rect.position.y - b.radius - 90.0
+	)
 
