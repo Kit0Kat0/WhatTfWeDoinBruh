@@ -324,6 +324,14 @@
   - Introduced a simple Virus vs Antivirus palette (`faction`, `virus_color`, `antivirus_color`) so enemy tinting is consistent.
 - **Files:** `scenes/EnemyBasic.tscn`, `scenes/EnemyTank.tscn`, `scenes/EnemySpeedster.tscn`, `scenes/EnemyBoss.tscn`, `scripts/EnemyBasic.gd`, `scripts/EnemyTank.gd`, `scripts/EnemySpeedster.gd`, `scripts/EnemyBoss.gd`, `shaders/flash_tint.gdshader`, `art/enemies/*`.
 
+### Juice: camera shake + enemy hit shake (05/06/26)
+
+- **Prompt:** Add a bit more juice; add shake on hit.
+- **Symptom:** Hits had flash feedback but lacked screen impact; enemy hits didn’t “kick”.
+- **Cause:** No camera or per-sprite shake logic existed.
+- **Fix:** Added `Camera2D` shake on player damage (jittering `Camera2D.offset` for a short duration), and added per-enemy sprite shake (directional kick + jitter) in `EnemyBasic`/`EnemyBoss`. Also forces `AnimatedSprite2D` enemies to `play("run")` on spawn.
+- **Files:** `scripts/Game.gd`, `scripts/EnemyBasic.gd`, `scripts/EnemyBoss.gd`.
+
 ## Adding new entries
 
 Copy/paste under **Entries**:

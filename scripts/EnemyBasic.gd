@@ -25,6 +25,9 @@ enum Faction { VIRUS, ANTIVIRUS }
 @export var follow_path_rotation: bool = false
 @export var damage_flash_duration_sec: float = 0.1
 @export var run_fps: float = 10.0
+@export var hit_shake_enabled: bool = true
+@export var hit_shake_strength_px: float = 7.0
+@export var hit_shake_duration_sec: float = 0.16
 
 var playfield_rect: Rect2
 var bullet_scene: PackedScene
@@ -34,6 +37,11 @@ var path_motion: EnemyPathMotion
 var _fire_cooldown: float = 0.0
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _damage_flash_remaining: float = 0.0
+var _hit_shake_time_left: float = 0.0
+var _hit_shake_duration: float = 0.0
+var _hit_shake_strength_px_live: float = 0.0
+var _hit_shake_dir: Vector2 = Vector2.ZERO
+var _sprite_base_pos: Vector2 = Vector2.ZERO
 
 @onready var _sprite_node: Node2D = (
 	get_node_or_null(^"AnimatedSprite2D") as Node2D
@@ -210,12 +218,18 @@ func _ready() -> void:
 	if _sprite_item != null and _sprite_item.material is ShaderMaterial:
 		_sprite_item.material = (_sprite_item.material as ShaderMaterial).duplicate(true)
 	if _anim_sprite != null:
-		_anim_sprite.speed_scale = 1.0 if run_fps <= 0.0 else (run_fps / maxf(1.0, _anim_sprite.sprite_frames.get_animation_speed(_anim_sprite.animation)))
+		# Ensure animation is actually playing even if the scene was duplicated/loaded in a paused state.
+		_anim_sprite.play(&"run")
+		var base_speed: float = _anim_sprite.sprite_frames.get_animation_speed(&"run")
+		_anim_sprite.speed_scale = 1.0 if run_fps <= 0.0 else (run_fps / maxf(1.0, base_speed))
+	if _sprite_node != null:
+		_sprite_base_pos = _sprite_node.position
 	_sync_sprite_scale()
 	_sync_visuals()
 
 
 func _process(delta: float) -> void:
+	_update_hit_shake(delta)
 	if _damage_flash_remaining > 0.0:
 		_damage_flash_remaining = maxf(0.0, _damage_flash_remaining - delta)
 		_sync_visuals()
@@ -272,6 +286,7 @@ func apply_beam_damage(amount: float) -> void:
 		queue_free()
 	else:
 		_damage_flash_remaining = damage_flash_duration_sec
+		_kick_hit_shake(maxf(1.0, amount) * 0.02)
 		_sync_visuals()
 		AudioManager.play_sfx("enemy_hit")
 
@@ -289,8 +304,47 @@ func _on_area_entered(area: Area2D) -> void:
 			queue_free()
 		else:
 			_damage_flash_remaining = damage_flash_duration_sec
+			_kick_hit_shake(dmg * 0.05)
 			_sync_visuals()
 			AudioManager.play_sfx("enemy_hit")
+
+
+func _kick_hit_shake(damage_scaled: float) -> void:
+	if not hit_shake_enabled or _sprite_node == null:
+		return
+	var strength: float = hit_shake_strength_px + clampf(damage_scaled, 0.0, hit_shake_strength_px)
+	var dur: float = hit_shake_duration_sec
+	_hit_shake_strength_px_live = maxf(_hit_shake_strength_px_live, strength)
+	_hit_shake_duration = maxf(_hit_shake_duration, dur)
+	_hit_shake_time_left = maxf(_hit_shake_time_left, dur)
+	var d: Vector2 = Vector2(_rng.randf_range(-1.0, 1.0), _rng.randf_range(-1.0, 1.0))
+	_hit_shake_dir = d.normalized() if d.length_squared() > 0.0001 else Vector2.RIGHT
+
+
+func _update_hit_shake(delta: float) -> void:
+	if _sprite_node == null:
+		return
+	if get_tree().paused:
+		_sprite_node.position = _sprite_base_pos
+		return
+	if _hit_shake_time_left <= 0.0:
+		_sprite_node.position = _sprite_base_pos
+		return
+	_hit_shake_time_left = maxf(0.0, _hit_shake_time_left - delta)
+	var t: float = 1.0
+	if _hit_shake_duration > 0.0:
+		t = clampf(_hit_shake_time_left / _hit_shake_duration, 0.0, 1.0)
+	# Linear falloff keeps more "punch" early than quadratic.
+	var strength: float = _hit_shake_strength_px_live * t
+	var kick: Vector2 = _hit_shake_dir * (strength * 0.55)
+	var jitter: Vector2 = Vector2(
+		_rng.randf_range(-strength, strength),
+		_rng.randf_range(-strength, strength)
+	) * 0.45
+	_sprite_node.position = _sprite_base_pos + kick + jitter
+	if _hit_shake_time_left <= 0.0:
+		_hit_shake_strength_px_live = 0.0
+		_hit_shake_duration = 0.0
 
 
 func _try_spawn_weapon_pickup_drop(from_boss: bool) -> void:

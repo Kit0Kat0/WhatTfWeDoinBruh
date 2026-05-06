@@ -20,3 +20,17 @@
   - If new enemies use `ShaderMaterial` flash, ensure the material is duplicated per instance to avoid shared-uniform bugs.
   - If spritesheets change frame sizes, update the atlas regions in the enemy scenes accordingly (current Craftpix run sheets are 6×48px frames).
 
+## 05/06/26 - ZavHar (camera shake + enemy hit shake)
+
+### What changed
+  - Added **camera shake** on player damage by tracking `Player.health_changed` deltas in `Game.gd` and jittering a `Camera2D.offset` for a short duration.
+  - Added **per-enemy sprite shake** on non-lethal hits (`EnemyBasic` + `EnemyBoss`), with punchier defaults and a directional kick component.
+  - Forced `AnimatedSprite2D` enemies to `play("run")` on spawn to avoid any cases where the run loop stops unexpectedly.
+
+### Why
+  - To add immediate hit feedback (“juice”) without changing gameplay rules or timings.
+
+### Any pitfalls / fixes
+  - Per-enemy shake is applied to the sprite node’s local `position`; ensure `_sprite_base_pos` is captured after the node exists, and reset on pause.
+
+

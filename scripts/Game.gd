@@ -40,6 +40,12 @@ var _is_resume_countdown_running: bool = false
 
 var _playfield_backdrop: PlayfieldBackdrop
 var _playfield_frame: PlayfieldFrame
+var _camera: Camera2D
+var _shake_rng: RandomNumberGenerator = RandomNumberGenerator.new()
+var _shake_time_left: float = 0.0
+var _shake_duration: float = 0.0
+var _shake_strength_px: float = 0.0
+var _last_player_hp: float = -1.0
 
 
 func _ready() -> void:
@@ -47,6 +53,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	playfield_rect = Rect2(Vector2.ZERO, get_viewport_rect().size)
 	_lives_remaining = maxi(0, respawn_lives)
+	_shake_rng.randomize()
 	_bootstrap_nodes()
 	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	AudioManager.play_music("gameplay")
@@ -58,6 +65,8 @@ func _on_viewport_size_changed() -> void:
 		_playfield_backdrop.set_playfield_rect(playfield_rect)
 	if _playfield_frame != null:
 		_playfield_frame.set_playfield_rect(playfield_rect)
+	if _camera != null:
+		_camera.global_position = playfield_rect.size * 0.5
 	if _player != null:
 		_player.playfield_rect = playfield_rect
 	if _spawner != null:
@@ -70,6 +79,13 @@ func _on_viewport_size_changed() -> void:
 
 
 func _bootstrap_nodes() -> void:
+	_camera = Camera2D.new()
+	_camera.name = "Camera2D"
+	_camera.process_mode = Node.PROCESS_MODE_PAUSABLE
+	_camera.global_position = playfield_rect.size * 0.5
+	add_child(_camera)
+	_camera.make_current()
+
 	_playfield_backdrop = PlayfieldBackdrop.new()
 	_playfield_backdrop.z_index = BACKDROP_Z_INDEX
 	_playfield_backdrop.set_playfield_rect(playfield_rect)
@@ -150,6 +166,7 @@ func _bootstrap_nodes() -> void:
 
 
 func _process(_delta: float) -> void:
+	_update_screen_shake(_delta)
 	if _is_game_over and Input.is_action_just_pressed("shoot"):
 		AudioManager.play_sfx("state_restart")
 		get_tree().reload_current_scene()
@@ -189,11 +206,57 @@ func _spawn_player(apply_respawn_immunity: bool) -> void:
 	_player.bullet_scene = player_bullet_scene
 	_player.bullet_parent = _player_bullets
 	_player.died.connect(_on_player_died)
+	if not _player.health_changed.is_connected(_on_player_health_changed):
+		_player.health_changed.connect(_on_player_health_changed)
 	if apply_respawn_immunity:
 		_player.reset_for_respawn(respawn_immunity)
 	if _hud != null:
 		_player.health_changed.connect(_hud.set_hp)
 		_hud.set_hp(_player.hp, _player.max_hp)
+	_last_player_hp = _player.hp
+
+
+func _on_player_health_changed(current_hp: float, _max_hp: float) -> void:
+	if _last_player_hp < 0.0:
+		_last_player_hp = current_hp
+		return
+	if current_hp < _last_player_hp:
+		var dmg: float = _last_player_hp - current_hp
+		# Small, snappy shake. Scale modestly with damage but clamp hard.
+		_shake(2.5 + minf(6.0, dmg * 0.05), 0.14)
+	_last_player_hp = current_hp
+
+
+func _shake(strength_px: float, duration_sec: float) -> void:
+	if duration_sec <= 0.0 or strength_px <= 0.0:
+		return
+	_shake_strength_px = maxf(_shake_strength_px, strength_px)
+	_shake_duration = maxf(_shake_duration, duration_sec)
+	_shake_time_left = maxf(_shake_time_left, duration_sec)
+
+
+func _update_screen_shake(delta: float) -> void:
+	if _camera == null:
+		return
+	if get_tree().paused:
+		_camera.offset = Vector2.ZERO
+		return
+	if _shake_time_left <= 0.0:
+		_camera.offset = Vector2.ZERO
+		return
+	_shake_time_left = maxf(0.0, _shake_time_left - delta)
+	var t: float = 1.0
+	if _shake_duration > 0.0:
+		t = clampf(_shake_time_left / _shake_duration, 0.0, 1.0)
+	# Ease out quickly so it feels snappy.
+	var strength: float = _shake_strength_px * (t * t)
+	_camera.offset = Vector2(
+		_shake_rng.randf_range(-strength, strength),
+		_shake_rng.randf_range(-strength, strength)
+	)
+	if _shake_time_left <= 0.0:
+		_shake_strength_px = 0.0
+		_shake_duration = 0.0
 
 
 func _on_boss_spawned(boss: EnemyBoss) -> void:
