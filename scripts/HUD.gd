@@ -2,34 +2,72 @@ extends CanvasLayer
 class_name HUD
 
 signal pause_quit_requested
-signal perk_keep_refresh_requested
-signal perk_switch_requested(kind: WeaponPickup.PerkKind)
 
 @onready var _hp_bar: ProgressBar = %HPBar
 @onready var _hp_text: Label = %HPText
 @onready var _lives_text: Label = %LivesText
 @onready var _wave_text: Label = %WaveText
 @onready var _boss_banner: Label = %BossBanner
+@onready var _boss_hp_bar: TextureProgressBar = %BossHpBar
+@onready var _perk_timer_bar: ProgressBar = %PerkTimerBar
 @onready var _game_over_panel: ColorRect = %GameOverPanel
 @onready var _pause_panel: ColorRect = %PausePanel
 @onready var _pause_text: Label = %PauseText
 @onready var _pause_quit_button: Button = %PauseQuitButton
-@onready var _perk_choice_panel: ColorRect = %PerkChoicePanel
-@onready var _perk_button_box: VBoxContainer = %PerkButtonBox
 
 var _boss_banner_ticket: int = 0
-
-const _PERK_LABELS: Dictionary = {
-	WeaponPickup.PerkKind.DOUBLE_STRAIGHT: "Double",
-	WeaponPickup.PerkKind.TRIPLE_STRAIGHT: "Triple",
-	WeaponPickup.PerkKind.BEAM: "Beam",
-}
+var _perk_fill_style: StyleBoxFlat
+var _perk_bg_style: StyleBoxFlat
 
 
-func set_hp(current: int, maximum: int) -> void:
-	_hp_bar.max_value = maximum
-	_hp_bar.value = current
-	_hp_text.text = "%d / %d" % [current, maximum]
+func _ready() -> void:
+	if _boss_hp_bar != null:
+		_boss_hp_bar.fill_mode = TextureProgressBar.FILL_BILINEAR_LEFT_AND_RIGHT
+
+
+func set_perk_timer(kind: WeaponPickup.PerkKind, ratio: float) -> void:
+	_perk_timer_bar.visible = true
+	_perk_timer_bar.value = clampf(ratio, 0.0, 1.0)
+
+	var col: Color = Color(0.45, 0.95, 1.0, 0.95)
+	match kind:
+		WeaponPickup.PerkKind.TRIPLE_STRAIGHT:
+			col = Color(0.95, 0.45, 1.0, 0.95)
+		WeaponPickup.PerkKind.BEAM:
+			col = Color(1.0, 0.82, 0.25, 0.95)
+		WeaponPickup.PerkKind.CROSS_FIRE:
+			col = Color(0.35, 1.0, 0.45, 0.95)
+
+	if _perk_fill_style == null:
+		_perk_fill_style = StyleBoxFlat.new()
+		_perk_fill_style.corner_radius_top_left = 6
+		_perk_fill_style.corner_radius_top_right = 6
+		_perk_fill_style.corner_radius_bottom_left = 6
+		_perk_fill_style.corner_radius_bottom_right = 6
+	if _perk_bg_style == null:
+		_perk_bg_style = StyleBoxFlat.new()
+		_perk_bg_style.corner_radius_top_left = 6
+		_perk_bg_style.corner_radius_top_right = 6
+		_perk_bg_style.corner_radius_bottom_left = 6
+		_perk_bg_style.corner_radius_bottom_right = 6
+
+	_perk_fill_style.bg_color = col
+	_perk_bg_style.bg_color = Color(col.r, col.g, col.b, 0.18)
+	_perk_timer_bar.add_theme_stylebox_override("fill", _perk_fill_style)
+	_perk_timer_bar.add_theme_stylebox_override("background", _perk_bg_style)
+
+
+func hide_perk_timer() -> void:
+	_perk_timer_bar.visible = false
+
+
+
+func set_hp(current: float, maximum: float) -> void:
+	_hp_bar.max_value = float(maximum)
+	_hp_bar.value = float(current)
+	var cur_i: int = int(roundi(current / 10.0))
+	var max_i: int = int(roundi(maximum / 10.0))
+	_hp_text.text = "%d / %d" % [cur_i, max_i]
 
 
 func set_lives(lives: int) -> void:
@@ -38,6 +76,21 @@ func set_lives(lives: int) -> void:
 
 func set_wave(wave_number: int) -> void:
 	_wave_text.text = "Wave: %d" % maxi(1, wave_number)
+
+
+func set_boss_hp(current_hp: float, maximum_hp: float) -> void:
+	if _boss_hp_bar == null:
+		return
+	var max_h: float = maxf(1.0, maximum_hp)
+	var cur: float = clampf(current_hp, 0.0, max_h)
+	_boss_hp_bar.max_value = max_h
+	_boss_hp_bar.value = cur
+	_boss_hp_bar.visible = true
+
+
+func hide_boss_hp_bar() -> void:
+	if _boss_hp_bar != null:
+		_boss_hp_bar.visible = false
 
 
 func show_boss_banner(duration: float = 2.0) -> void:
@@ -50,6 +103,7 @@ func show_boss_banner(duration: float = 2.0) -> void:
 
 
 func show_game_over() -> void:
+	hide_boss_hp_bar()
 	_game_over_panel.visible = true
 
 
@@ -74,47 +128,5 @@ func hide_pause() -> void:
 	_pause_quit_button.visible = false
 
 
-func show_perk_choice(current_kind: WeaponPickup.PerkKind) -> void:
-	for c in _perk_button_box.get_children():
-		c.queue_free()
-	var keep_btn := Button.new()
-	keep_btn.custom_minimum_size = Vector2(320, 40)
-	keep_btn.text = "Keep %s — reset timer" % _perk_label(current_kind)
-	keep_btn.pressed.connect(func() -> void:
-		AudioManager.play_sfx("ui_click")
-		perk_keep_refresh_requested.emit()
-	)
-	_perk_button_box.add_child(keep_btn)
-	var all_kinds: Array[WeaponPickup.PerkKind] = [
-		WeaponPickup.PerkKind.DOUBLE_STRAIGHT,
-		WeaponPickup.PerkKind.TRIPLE_STRAIGHT,
-		WeaponPickup.PerkKind.BEAM,
-	]
-	for k in all_kinds:
-		if k == current_kind:
-			continue
-		var captured: WeaponPickup.PerkKind = k
-		var sw := Button.new()
-		sw.custom_minimum_size = Vector2(320, 40)
-		sw.text = "Switch to %s" % _perk_label(captured)
-		sw.pressed.connect(func() -> void:
-			AudioManager.play_sfx("ui_click")
-			perk_switch_requested.emit(captured)
-		)
-		_perk_button_box.add_child(sw)
-	_perk_choice_panel.visible = true
-
-
-func hide_perk_choice() -> void:
-	_perk_choice_panel.visible = false
-	for c in _perk_button_box.get_children():
-		c.queue_free()
-
-
-func _perk_label(kind: WeaponPickup.PerkKind) -> String:
-	return str(_PERK_LABELS.get(kind, "?"))
-
-
 func _on_pause_quit_button_pressed() -> void:
 	pause_quit_requested.emit()
-

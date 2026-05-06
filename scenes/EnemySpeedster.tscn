@@ -1,23 +1,20 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://cde8xd36uklto"]
 
-[ext_resource type="Script" path="res://scripts/EnemySpeedster.gd" id="1_speedster_script"]
+[ext_resource type="Script" uid="uid://burcmco27p6yx" path="res://scripts/EnemySpeedster.gd" id="1_speedster_script"]
 
 [sub_resource type="CircleShape2D" id="1_circle"]
-radius = 10.0
 
-[node name="EnemySpeedster" type="Area2D"]
+[node name="EnemySpeedster" type="Area2D" unique_id=1182570388]
 collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_speedster_script")
-hp = 4
-speed = 170.0
+hp = 40.0
+speed = 340.0
 horizontal_speed = 150.0
-shot_interval = 0.5
+shot_interval = 1.2
 bullet_speed = 260.0
-bullet_damage = 1
-use_wave_bullets = false
 radius = 10.0
 shot_sfx_id = "enemy_speedster_shot"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1055981317]
 shape = SubResource("1_circle")

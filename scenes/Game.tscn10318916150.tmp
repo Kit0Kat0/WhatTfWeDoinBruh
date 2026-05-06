@@ -4,6 +4,7 @@
 
 [node name="Game" type="Node2D" unique_id=606835604]
 script = ExtResource("1_game_script")
+weapon_pickup_chance_normal = 1.0
 
 [node name="EnemyPaths" type="Node2D" parent="." unique_id=2014735436]
 

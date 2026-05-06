@@ -1,59 +1,75 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://cqk2iuxjdkcoo"]
 
-[ext_resource type="Script" path="res://scripts/HUD.gd" id="1_hud_script"]
+[ext_resource type="Script" uid="uid://b7lub0xdty1vb" path="res://scripts/HUD.gd" id="1_hud_script"]
 
-[node name="HUD" type="CanvasLayer"]
+[sub_resource type="Gradient" id="Gradient_boss_under"]
+colors = PackedColorArray(0, 0, 0, 0.85882354, 0, 0, 0, 0.8784314)
+
+[sub_resource type="GradientTexture2D" id="Texture_under"]
+gradient = SubResource("Gradient_boss_under")
+width = 16
+height = 16
+
+[sub_resource type="Gradient" id="Gradient_boss_fill"]
+colors = PackedColorArray(0.81960785, 0, 0, 1, 0.9490196, 0, 0, 1)
+
+[sub_resource type="GradientTexture2D" id="Texture_progress"]
+gradient = SubResource("Gradient_boss_fill")
+width = 16
+height = 16
+
+[node name="HUD" type="CanvasLayer" unique_id=382090773]
 script = ExtResource("1_hud_script")
 
-[node name="TopLeft" type="Control" parent="."]
+[node name="TopLeft" type="Control" parent="." unique_id=469696340]
+layout_mode = 3
 anchors_preset = 0
-anchor_right = 0.0
-anchor_bottom = 0.0
 offset_left = 12.0
 offset_top = 12.0
 offset_right = 240.0
 offset_bottom = 72.0
 
-[node name="VBox" type="VBoxContainer" parent="TopLeft"]
-anchors_preset = 15
+[node name="VBox" type="VBoxContainer" parent="TopLeft" unique_id=1654127305]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 0.0
-offset_bottom = 0.0
 theme_override_constants/separation = 6
 
-[node name="HPRow" type="HBoxContainer" parent="TopLeft/VBox"]
+[node name="HPRow" type="HBoxContainer" parent="TopLeft/VBox" unique_id=1029862077]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="HPLabel" type="Label" parent="TopLeft/VBox/HPRow"]
+[node name="HPLabel" type="Label" parent="TopLeft/VBox/HPRow" unique_id=1247431519]
+layout_mode = 2
 text = "HP"
 vertical_alignment = 1
 
-[node name="HPBar" type="ProgressBar" parent="TopLeft/VBox/HPRow"]
+[node name="HPBar" type="ProgressBar" parent="TopLeft/VBox/HPRow" unique_id=982972357]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 16)
-show_percentage = false
+layout_mode = 2
 value = 5.0
+show_percentage = false
 
-[node name="HPText" type="Label" parent="TopLeft/VBox/HPRow"]
+[node name="HPText" type="Label" parent="TopLeft/VBox/HPRow" unique_id=183967287]
 unique_name_in_owner = true
+layout_mode = 2
 text = "5 / 5"
 vertical_alignment = 1
 
-[node name="LivesText" type="Label" parent="TopLeft/VBox"]
+[node name="LivesText" type="Label" parent="TopLeft/VBox" unique_id=656139498]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Lives: 3"
 
-[node name="WaveText" type="Label" parent="TopLeft/VBox"]
+[node name="WaveText" type="Label" parent="TopLeft/VBox" unique_id=1042425714]
 unique_name_in_owner = true
+layout_mode = 2
 text = "Wave: 1"
 
-[node name="BossBanner" type="Label" parent="."]
-visible = false
+[node name="BossBanner" type="Label" parent="." unique_id=705982589]
 unique_name_in_owner = true
+visible = false
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
@@ -65,24 +81,56 @@ offset_right = 160.0
 offset_bottom = 24.0
 grow_horizontal = 2
 grow_vertical = 2
-horizontal_alignment = 1
-vertical_alignment = 1
 theme_override_font_sizes/font_size = 32
 text = "BOSS WAVE"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="GameOverPanel" type="ColorRect" parent="."]
-visible = false
+[node name="PerkTimerBar" type="ProgressBar" parent="." unique_id=173586541]
 unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(200, 14)
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -212.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 26.0
+grow_horizontal = 0
+max_value = 1.0
+value = 1.0
+show_percentage = false
+
+[node name="BossHpBar" type="TextureProgressBar" parent="." unique_id=1931342480]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 8)
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+value = 100.0
+nine_patch_stretch = true
+texture_under = SubResource("Texture_under")
+texture_progress = SubResource("Texture_progress")
+
+[node name="GameOverPanel" type="ColorRect" parent="." unique_id=306605988]
+unique_name_in_owner = true
+visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 0.0
-offset_bottom = 0.0
 mouse_filter = 2
 color = Color(0, 0, 0, 0.72)
 
-[node name="CenterBox" type="VBoxContainer" parent="GameOverPanel"]
-anchors_preset = 8
+[node name="CenterBox" type="VBoxContainer" parent="GameOverPanel" unique_id=227421682]
+layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -96,31 +144,29 @@ grow_vertical = 2
 theme_override_constants/separation = 12
 alignment = 1
 
-[node name="GameOverText" type="Label" parent="GameOverPanel/CenterBox"]
+[node name="GameOverText" type="Label" parent="GameOverPanel/CenterBox" unique_id=1206855473]
 layout_mode = 2
-horizontal_alignment = 1
 theme_override_font_sizes/font_size = 42
 text = "GAME OVER"
-
-[node name="RestartText" type="Label" parent="GameOverPanel/CenterBox"]
-layout_mode = 2
 horizontal_alignment = 1
+
+[node name="RestartText" type="Label" parent="GameOverPanel/CenterBox" unique_id=388180757]
+layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Press Spacebar to play again"
+horizontal_alignment = 1
 
-[node name="PausePanel" type="ColorRect" parent="."]
-visible = false
+[node name="PausePanel" type="ColorRect" parent="." unique_id=1817282747]
 unique_name_in_owner = true
+visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 0.0
-offset_bottom = 0.0
 mouse_filter = 2
 color = Color(0, 0, 0, 0.62)
 
-[node name="PauseCenterBox" type="VBoxContainer" parent="PausePanel"]
-anchors_preset = 8
+[node name="PauseCenterBox" type="VBoxContainer" parent="PausePanel" unique_id=832497265]
+layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -134,40 +180,30 @@ grow_vertical = 2
 theme_override_constants/separation = 14
 alignment = 1
 
-[node name="PauseText" type="Label" parent="PausePanel/PauseCenterBox"]
+[node name="PauseText" type="Label" parent="PausePanel/PauseCenterBox" unique_id=1933075152]
 unique_name_in_owner = true
 layout_mode = 2
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-horizontal_alignment = 1
-vertical_alignment = 1
 theme_override_font_sizes/font_size = 34
 text = "PAUSED"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="PauseQuitButton" type="Button" parent="PausePanel/PauseCenterBox"]
+[node name="PauseQuitButton" type="Button" parent="PausePanel/PauseCenterBox" unique_id=1813727349]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(260, 44)
 layout_mode = 2
 text = "Quit to Main Menu"
 
-[connection signal="pressed" from="PausePanel/PauseCenterBox/PauseQuitButton" to="." method="_on_pause_quit_button_pressed"]
-
-[node name="PerkChoicePanel" type="ColorRect" parent="."]
-visible = false
+[node name="PerkChoicePanel" type="ColorRect" parent="." unique_id=368821010]
 unique_name_in_owner = true
+visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 0.0
-offset_bottom = 0.0
-mouse_filter = 0
 color = Color(0, 0, 0, 0.78)
 
-[node name="PerkCenterBox" type="VBoxContainer" parent="PerkChoicePanel"]
-anchors_preset = 8
+[node name="PerkCenterBox" type="VBoxContainer" parent="PerkChoicePanel" unique_id=1492196977]
+layout_mode = 0
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -181,21 +217,22 @@ grow_vertical = 2
 theme_override_constants/separation = 14
 alignment = 1
 
-[node name="PerkTitle" type="Label" parent="PerkChoicePanel/PerkCenterBox"]
+[node name="PerkTitle" type="Label" parent="PerkChoicePanel/PerkCenterBox" unique_id=1835144777]
 layout_mode = 2
-horizontal_alignment = 1
 theme_override_font_sizes/font_size = 28
 text = "Choose weapon perk"
-
-[node name="PerkHint" type="Label" parent="PerkChoicePanel/PerkCenterBox"]
-layout_mode = 2
 horizontal_alignment = 1
+
+[node name="PerkHint" type="Label" parent="PerkChoicePanel/PerkCenterBox" unique_id=230976581]
+layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "Game is paused until you choose."
+horizontal_alignment = 1
 
-[node name="PerkButtonBox" type="VBoxContainer" parent="PerkChoicePanel/PerkCenterBox"]
+[node name="PerkButtonBox" type="VBoxContainer" parent="PerkChoicePanel/PerkCenterBox" unique_id=2135984257]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
+[connection signal="pressed" from="PausePanel/PauseCenterBox/PauseQuitButton" to="." method="_on_pause_quit_button_pressed"]

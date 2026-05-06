@@ -22,12 +22,12 @@ func _fire_forward() -> void:
 		bullet_parent.add_child(b)
 		b.global_position = global_position
 		b.velocity = d * bullet_speed
-		b.damage = maxi(1, bullet_damage)
+		b.damage = maxf(1.0, bullet_damage)
 
 	if shot_sfx_id != "":
 		AudioManager.play_sfx(shot_sfx_id)
 
 
 func _draw() -> void:
-	draw_circle(Vector2.ZERO, radius, Color(0.45, 0.8, 0.35, 1.0))
-	draw_circle(Vector2.ZERO, maxf(1.0, radius - 5.0), Color(0.15, 0.25, 0.1, 1.0))
+	draw_circle(Vector2.ZERO, radius, _with_hit_flash(Color(0.45, 0.8, 0.35, 1.0)))
+	draw_circle(Vector2.ZERO, maxf(1.0, radius - 5.0), _with_hit_flash(Color(0.15, 0.25, 0.1, 1.0)))

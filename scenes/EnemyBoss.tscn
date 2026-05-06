@@ -1,19 +1,14 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://b0ydb1hgsaue0"]
 
-[ext_resource type="Script" path="res://scripts/EnemyBoss.gd" id="1_boss_script"]
+[ext_resource type="Script" uid="uid://d2gc1htp07sdx" path="res://scripts/EnemyBoss.gd" id="1_boss_script"]
 
 [sub_resource type="CircleShape2D" id="1_circle"]
 radius = 78.0
 
-[node name="EnemyBoss" type="Area2D"]
+[node name="EnemyBoss" type="Area2D" unique_id=82860786]
 collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_boss_script")
-hp = 160
-horizontal_speed = 95.0
-entry_speed = 140.0
-top_lane_margin = 36.0
-radius = 78.0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1879573072]
 shape = SubResource("1_circle")

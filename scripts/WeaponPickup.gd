@@ -1,7 +1,7 @@
 extends Area2D
 class_name WeaponPickup
 
-enum PerkKind { DOUBLE_STRAIGHT, TRIPLE_STRAIGHT, BEAM }
+enum PerkKind { DOUBLE_STRAIGHT, TRIPLE_STRAIGHT, BEAM, CROSS_FIRE }
 
 @export var fall_speed: float = 55.0
 @export var life_seconds: float = 14.0
@@ -42,12 +42,6 @@ func _on_area_entered(area: Area2D) -> void:
 	var p: Player = area as Player
 	if p == null:
 		return
-	if p.has_active_weapon_perk():
-		var game: Node = get_tree().get_first_node_in_group("game_controller")
-		if game != null and game.has_method("offer_weapon_perk_pickup"):
-			game.call("offer_weapon_perk_pickup", perk_kind)
-		queue_free()
-		return
 	p.apply_weapon_pickup(perk_kind)
 	queue_free()
 
@@ -59,5 +53,7 @@ func _draw() -> void:
 			col = Color(0.95, 0.45, 1.0, 0.95)
 		PerkKind.BEAM:
 			col = Color(1.0, 0.82, 0.25, 0.95)
+		PerkKind.CROSS_FIRE:
+			col = Color(0.35, 1.0, 0.45, 0.95)
 	draw_circle(Vector2.ZERO, 12.0, col)
 	draw_arc(Vector2.ZERO, 12.0, 0.0, TAU, 32, Color(1, 1, 1, 0.5), 2.0, true)

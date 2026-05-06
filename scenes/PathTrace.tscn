@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://dbfh7r57quajw"]
+
+[ext_resource type="Script" uid="uid://c1m4os7cnjpvg" path="res://scripts/PathTrace.gd" id="1_path_trace"]
+
+[node name="PathTrace" type="Node2D" unique_id=1992429399]
+z_index = 4
+script = ExtResource("1_path_trace")

@@ -1,6 +1,11 @@
 extends Node2D
 
 const MAIN_MENU_SCENE_PATH: String = "res://scenes/Main.tscn"
+## Bullets render above the playfield fill but below ships (see BACKDROP_Z_INDEX).
+const BULLETS_Z_INDEX: int = -10
+const BACKDROP_Z_INDEX: int = -50
+## Playfield border drawn above all world Node2D nodes (HUD remains on `CanvasLayer` above).
+const PLAYFIELD_FRAME_Z_INDEX: int = 100
 
 @export var player_scene: PackedScene = preload("res://scenes/Player.tscn")
 @export var enemy_scene: PackedScene = preload("res://scenes/EnemyBasic.tscn")
@@ -12,6 +17,7 @@ const MAIN_MENU_SCENE_PATH: String = "res://scenes/Main.tscn"
 @export var spawner_scene: PackedScene = preload("res://scenes/EnemySpawner.tscn")
 @export var hud_scene: PackedScene = preload("res://scenes/HUD.tscn")
 @export var weapon_pickup_scene: PackedScene = preload("res://scenes/WeaponPickup.tscn")
+@export var path_trace_scene: PackedScene = preload("res://scenes/PathTrace.tscn")
 @export var weapon_pickup_chance_normal: float = 0.11
 @export var weapon_pickup_chance_boss: float = 0.48
 @export var respawn_lives: int = 3
@@ -31,7 +37,9 @@ var _lives_remaining: int = 0
 var _is_game_over: bool = false
 var _is_paused: bool = false
 var _is_resume_countdown_running: bool = false
-var _perk_choice_active: bool = false
+
+var _playfield_backdrop: PlayfieldBackdrop
+var _playfield_frame: PlayfieldFrame
 
 
 func _ready() -> void:
@@ -40,10 +48,33 @@ func _ready() -> void:
 	playfield_rect = Rect2(Vector2.ZERO, get_viewport_rect().size)
 	_lives_remaining = maxi(0, respawn_lives)
 	_bootstrap_nodes()
+	get_viewport().size_changed.connect(_on_viewport_size_changed)
 	AudioManager.play_music("gameplay")
 
 
+func _on_viewport_size_changed() -> void:
+	playfield_rect = Rect2(Vector2.ZERO, get_viewport_rect().size)
+	if _playfield_backdrop != null:
+		_playfield_backdrop.set_playfield_rect(playfield_rect)
+	if _playfield_frame != null:
+		_playfield_frame.set_playfield_rect(playfield_rect)
+	if _player != null:
+		_player.playfield_rect = playfield_rect
+	if _spawner != null:
+		_spawner.playfield_rect = playfield_rect
+	var er: Node2D = get_node_or_null(^"EnemyPaths") as Node2D
+	var br: Node2D = get_node_or_null(^"BossPaths") as Node2D
+	if er != null and br != null:
+		EnemyPathLibrary.configure_paths(er, br, playfield_rect)
+	_player_spawn_position = Vector2(playfield_rect.size.x * 0.5, playfield_rect.size.y * 0.82)
+
+
 func _bootstrap_nodes() -> void:
+	_playfield_backdrop = PlayfieldBackdrop.new()
+	_playfield_backdrop.z_index = BACKDROP_Z_INDEX
+	_playfield_backdrop.set_playfield_rect(playfield_rect)
+	add_child(_playfield_backdrop)
+
 	_hud = hud_scene.instantiate() as HUD
 	if _hud != null:
 		add_child(_hud)
@@ -51,10 +82,7 @@ func _bootstrap_nodes() -> void:
 		_hud.set_lives(_lives_remaining)
 		_hud.hide_game_over()
 		_hud.hide_pause()
-		_hud.hide_perk_choice()
 		_hud.pause_quit_requested.connect(_on_pause_quit_requested)
-		_hud.perk_keep_refresh_requested.connect(_on_perk_keep_refresh)
-		_hud.perk_switch_requested.connect(_on_perk_switch)
 
 	_enemies = Node2D.new()
 	_enemies.name = "Enemies"
@@ -64,17 +92,28 @@ func _bootstrap_nodes() -> void:
 	_player_bullets = Node2D.new()
 	_player_bullets.name = "PlayerBullets"
 	_player_bullets.process_mode = Node.PROCESS_MODE_PAUSABLE
+	_player_bullets.z_index = BULLETS_Z_INDEX
 	add_child(_player_bullets)
 
 	_enemy_bullets = Node2D.new()
 	_enemy_bullets.name = "EnemyBullets"
 	_enemy_bullets.process_mode = Node.PROCESS_MODE_PAUSABLE
+	_enemy_bullets.z_index = BULLETS_Z_INDEX
 	add_child(_enemy_bullets)
 
 	_pickups = Node2D.new()
 	_pickups.name = "Pickups"
 	_pickups.process_mode = Node.PROCESS_MODE_PAUSABLE
 	add_child(_pickups)
+
+	var path_traces: Node2D = Node2D.new()
+	path_traces.name = "PathTraces"
+	path_traces.process_mode = Node.PROCESS_MODE_PAUSABLE
+	add_child(path_traces)
+
+	var enemy_paths_root: Node2D = get_node_or_null(^"EnemyPaths") as Node2D
+	var boss_paths_root: Node2D = get_node_or_null(^"BossPaths") as Node2D
+	EnemyPathLibrary.configure_paths(enemy_paths_root, boss_paths_root, playfield_rect)
 
 	_player_spawn_position = Vector2(playfield_rect.size.x * 0.5, playfield_rect.size.y * 0.82)
 	_spawn_player(false)
@@ -83,9 +122,11 @@ func _bootstrap_nodes() -> void:
 	if _spawner == null:
 		push_error("Failed to instantiate EnemySpawner from spawner_scene.")
 		return
-	add_child(_spawner)
+	# Configure before adding to the tree so _ready() can build wave plan safely.
 	_spawner.process_mode = Node.PROCESS_MODE_PAUSABLE
 	_spawner.playfield_rect = playfield_rect
+	_spawner.enemy_paths_root = enemy_paths_root
+	_spawner.boss_paths_root = boss_paths_root
 	_spawner.enemy_scene = enemy_scene
 	_spawner.tank_enemy_scene = tank_enemy_scene
 	_spawner.speedster_enemy_scene = speedster_enemy_scene
@@ -93,9 +134,19 @@ func _bootstrap_nodes() -> void:
 	_spawner.enemy_parent = _enemies
 	_spawner.enemy_bullet_scene = enemy_bullet_scene
 	_spawner.enemy_bullet_parent = _enemy_bullets
+	_spawner.path_trace_scene = path_trace_scene
+	_spawner.path_trace_parent = path_traces
 	_spawner.wave_started.connect(_on_wave_started)
+	_spawner.boss_spawned.connect(_on_boss_spawned)
+	add_child(_spawner)
 	if _hud != null:
 		_hud.set_wave(_spawner.get_current_wave())
+
+	_playfield_frame = PlayfieldFrame.new()
+	_playfield_frame.name = "PlayfieldFrame"
+	_playfield_frame.z_index = PLAYFIELD_FRAME_Z_INDEX
+	_playfield_frame.set_playfield_rect(playfield_rect)
+	add_child(_playfield_frame)
 
 
 func _process(_delta: float) -> void:
@@ -106,13 +157,11 @@ func _process(_delta: float) -> void:
 	if Input.is_action_just_pressed("pause_toggle"):
 		_handle_pause_toggle()
 		return
-	queue_redraw()
-
-
-func _draw() -> void:
-	var r: Rect2 = playfield_rect.grow(-8.0)
-	draw_rect(r, Color(0.05, 0.05, 0.07, 1.0), true)
-	draw_rect(r, Color(0.25, 0.25, 0.3, 1.0), false, 2.0)
+	if _hud != null and _player != null:
+		if _player.has_active_weapon_perk():
+			_hud.set_perk_timer(_player.get_weapon_perk_kind(), _player.get_weapon_perk_time_ratio())
+		else:
+			_hud.hide_perk_timer()
 
 
 func _on_player_died() -> void:
@@ -124,7 +173,8 @@ func _on_player_died() -> void:
 	_lives_remaining -= 1
 	if _hud != null:
 		_hud.set_lives(_lives_remaining)
-	_spawn_player(true)
+	# Defer respawn so we don't toggle Area2D monitoring while physics is flushing overlap queries.
+	call_deferred("_spawn_player", true)
 
 
 func _spawn_player(apply_respawn_immunity: bool) -> void:
@@ -146,11 +196,33 @@ func _spawn_player(apply_respawn_immunity: bool) -> void:
 		_hud.set_hp(_player.hp, _player.max_hp)
 
 
+func _on_boss_spawned(boss: EnemyBoss) -> void:
+	if _hud == null or boss == null:
+		return
+	if not boss.health_changed.is_connected(_on_boss_health_changed):
+		boss.health_changed.connect(_on_boss_health_changed)
+	if not boss.tree_exited.is_connected(_on_boss_tree_exited):
+		boss.tree_exited.connect(_on_boss_tree_exited, CONNECT_ONE_SHOT)
+
+
+func _on_boss_health_changed(current_hp: float, maximum_hp: float) -> void:
+	if _hud != null:
+		_hud.set_boss_hp(current_hp, maximum_hp)
+
+
+func _on_boss_tree_exited() -> void:
+	if _hud != null:
+		_hud.hide_boss_hp_bar()
+
+
 func _on_wave_started(wave_number: int, _enemy_target: int, is_boss_wave: bool) -> void:
 	if _hud != null:
 		_hud.set_wave(wave_number)
 		if is_boss_wave:
 			_hud.show_boss_banner()
+			_hud.hide_boss_hp_bar()
+		else:
+			_hud.hide_boss_hp_bar()
 	if is_boss_wave:
 		AudioManager.play_stinger("boss_intro")
 		AudioManager.play_music("boss", 0.7)
@@ -163,11 +235,6 @@ func _game_over() -> void:
 	if _is_game_over:
 		return
 	_is_game_over = true
-	if _perk_choice_active:
-		_perk_choice_active = false
-		get_tree().paused = false
-		if _hud != null:
-			_hud.hide_perk_choice()
 	if _spawner != null:
 		_spawner.set_process(false)
 	_clear_node_children(_enemies)
@@ -191,50 +258,11 @@ func _clear_node_children(root: Node) -> void:
 func offer_weapon_perk_pickup(offered: WeaponPickup.PerkKind) -> void:
 	if _is_game_over or _player == null:
 		return
-	if not _player.has_active_weapon_perk():
-		_player.apply_weapon_pickup(offered)
-		return
-	call_deferred("_deferred_open_perk_choice")
-
-
-func _deferred_open_perk_choice() -> void:
-	if _is_game_over or _player == null or _perk_choice_active:
-		return
-	if not _player.has_active_weapon_perk():
-		return
-	_perk_choice_active = true
-	_is_paused = false
-	_is_resume_countdown_running = false
-	get_tree().paused = true
-	if _hud != null:
-		_hud.hide_pause()
-		_hud.show_perk_choice(_player.get_weapon_perk_kind())
-
-
-func _close_perk_choice_and_resume() -> void:
-	if not _perk_choice_active:
-		return
-	_perk_choice_active = false
-	get_tree().paused = false
-	if _hud != null:
-		_hud.hide_perk_choice()
-
-
-func _on_perk_keep_refresh() -> void:
-	if _player != null:
-		_player.refresh_weapon_perk_timer()
-	_close_perk_choice_and_resume()
-
-
-func _on_perk_switch(kind: WeaponPickup.PerkKind) -> void:
-	if _player != null:
-		_player.apply_weapon_pickup(kind)
-	_close_perk_choice_and_resume()
+	# Auto-apply pickups (no perk-choice pause screen).
+	_player.apply_weapon_pickup(offered)
 
 
 func _handle_pause_toggle() -> void:
-	if _perk_choice_active:
-		return
 	if _is_game_over or _is_resume_countdown_running:
 		return
 	if not _is_paused:
@@ -269,17 +297,26 @@ func try_spawn_weapon_pickup(at: Vector2, from_boss: bool = false) -> void:
 	var chance: float = weapon_pickup_chance_boss if from_boss else weapon_pickup_chance_normal
 	if randf() > chance:
 		return
-	var pk: WeaponPickup = weapon_pickup_scene.instantiate() as WeaponPickup
-	if pk == null:
-		return
 	var kind: WeaponPickup.PerkKind
-	match randi() % 3:
+	match randi() % 4:
 		0:
 			kind = WeaponPickup.PerkKind.DOUBLE_STRAIGHT
 		1:
 			kind = WeaponPickup.PerkKind.TRIPLE_STRAIGHT
-		_:
+		2:
 			kind = WeaponPickup.PerkKind.BEAM
+		_:
+			kind = WeaponPickup.PerkKind.CROSS_FIRE
+	# Instantiating/adding Area2D during area_entered runs in a physics flush; defer add_child.
+	call_deferred("_spawn_weapon_pickup_deferred", kind, at)
+
+
+func _spawn_weapon_pickup_deferred(kind: WeaponPickup.PerkKind, at: Vector2) -> void:
+	if weapon_pickup_scene == null or _is_game_over or _pickups == null:
+		return
+	var pk: WeaponPickup = weapon_pickup_scene.instantiate() as WeaponPickup
+	if pk == null:
+		return
 	pk.setup(kind, playfield_rect)
 	pk.global_position = at
 	_pickups.add_child(pk)

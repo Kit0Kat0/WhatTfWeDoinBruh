@@ -63,6 +63,9 @@ var _current_music_id: String = ""
 var _music_fade_tween: Tween
 var _duck_tween: Tween
 
+## When true, emits a one-time warning if `res://audio/` assets are missing and procedural placeholders are used. Off by default to keep the console clean during prototype runs; enable on the AudioManager autoload in Project Settings when authoring final audio.
+@export var warn_on_procedural_audio_fallback: bool = true
+
 # When `res://audio/...` files are absent, generate tiny PCM loops/blips so the
 # game is audible during development. Drop real assets to replace these.
 var _procedural_warned: bool = false
@@ -203,7 +206,7 @@ func _try_load_stream(path: Variant) -> AudioStream:
 func _get_procedural_stream(res_path: String) -> AudioStreamWAV:
 	if _procedural_cache.has(res_path):
 		return _procedural_cache[res_path]
-	if not _procedural_warned:
+	if warn_on_procedural_audio_fallback and not _procedural_warned:
 		_procedural_warned = true
 		push_warning(
 			"Audio assets missing under res://audio/. Using procedural placeholders. "

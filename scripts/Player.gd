@@ -5,25 +5,26 @@ class_name Player
 @export var focus_speed_multiplier: float = 0.45
 @export var boost_speed_multiplier: float = 1.6
 @export var fire_interval: float = 0.08
-@export var beam_fire_interval: float = 0.42
-@export var beam_damage: int = 3
+@export var beam_fire_interval: float = 0.6
+@export var beam_line_scene: PackedScene = preload("res://scenes/PlayerBeamLine.tscn")
 @export var straight_row_spacing: float = 11.0
+@export var triple_fan_angle_degrees: float = 17.5
 @export var weapon_perk_duration_sec: float = 45.0
 @export var i_frames: float = 0.8
-@export var max_hp: int = 25
+@export var max_hp: float = 250.0
 
-enum WeaponMode { SINGLE, DOUBLE_STRAIGHT, TRIPLE_STRAIGHT, BEAM }
+enum WeaponMode { SINGLE, DOUBLE_STRAIGHT, TRIPLE_STRAIGHT, BEAM, CROSS_FIRE }
 @export var muzzle_flash_scene: PackedScene = preload("res://scenes/VFX/MuzzleFlash.tscn")
 @export var move_anim_fps: float = 12.0
 
-signal health_changed(current: int, maximum: int)
+signal health_changed(current: float, maximum: float)
 signal died
 
 var playfield_rect: Rect2
 var bullet_scene: PackedScene
 var bullet_parent: Node
 
-var hp: int = 25
+var hp: float = 250.0
 var weapon_mode: WeaponMode = WeaponMode.SINGLE
 var _weapon_perk_time_left: float = 0.0
 var _fire_cooldown: float = 0.0
@@ -47,7 +48,7 @@ var _move_frames: Array[Texture2D] = []
 func _ready() -> void:
 	add_to_group(Defs.GROUP_PLAYER)
 	area_entered.connect(_on_area_entered)
-	hp = clampi(hp, 0, max_hp)
+	hp = clampf(hp, 0.0, max_hp)
 	health_changed.emit(hp, max_hp)
 	_move_frames = _load_move_frames()
 	queue_redraw()
@@ -160,34 +161,51 @@ func _update_shooting(delta: float) -> void:
 
 	_fire_cooldown = _fire_interval_for_weapon()
 
-	var muzzle_pos: Vector2 = global_position + Vector2(0.0, -16.0)
+	var flash_muzzle_offset: Vector2 = Vector2(0.0, -26.0)
+	var bullet_speed: float = 900.0
+	var base_v: Vector2 = Vector2(0.0, -bullet_speed)
 	match weapon_mode:
 		WeaponMode.SINGLE:
-			_spawn_player_bullet(Vector2.ZERO, false, false)
+			_spawn_player_bullet(Vector2.ZERO, base_v)
 		WeaponMode.DOUBLE_STRAIGHT:
-			_spawn_player_bullet(Vector2(-straight_row_spacing, 0.0), false, false)
-			_spawn_player_bullet(Vector2(straight_row_spacing, 0.0), false, false)
+			_spawn_player_bullet(Vector2(-straight_row_spacing, 0.0), base_v)
+			_spawn_player_bullet(Vector2(straight_row_spacing, 0.0), base_v)
 		WeaponMode.TRIPLE_STRAIGHT:
-			_spawn_player_bullet(Vector2(-straight_row_spacing * 1.4, 0.0), false, false)
-			_spawn_player_bullet(Vector2.ZERO, false, false)
-			_spawn_player_bullet(Vector2(straight_row_spacing * 1.4, 0.0), false, false)
+			var a: float = deg_to_rad(triple_fan_angle_degrees)
+			_spawn_player_bullet(Vector2(-straight_row_spacing * 1.4, 0.0), base_v.rotated(-a))
+			_spawn_player_bullet(Vector2.ZERO, base_v)
+			_spawn_player_bullet(Vector2(straight_row_spacing * 1.4, 0.0), base_v.rotated(a))
 		WeaponMode.BEAM:
-			_spawn_player_bullet(Vector2.ZERO, true, true)
-	_spawn_muzzle_flash(muzzle_pos)
-	AudioManager.play_sfx("player_shot")
+			_spawn_beam_line(Vector2.ZERO)
+		WeaponMode.CROSS_FIRE:
+			_spawn_player_bullet(Vector2.ZERO, Vector2(0.0, -bullet_speed))
+			_spawn_player_bullet(Vector2.ZERO, Vector2(0.0, bullet_speed))
+			_spawn_player_bullet(Vector2.ZERO, Vector2(-bullet_speed, 0.0))
+			_spawn_player_bullet(Vector2.ZERO, Vector2(bullet_speed, 0.0))
+	_spawn_muzzle_flash(flash_muzzle_offset)
+	var shot_pitch_jitter: float = randf_range(0.94, 1.06)
+	AudioManager.play_sfx("player_shot", shot_pitch_jitter)
 
 
-func _spawn_player_bullet(offset_from_center: Vector2, use_pierce: bool, as_beam: bool) -> void:
+func _spawn_player_bullet(offset_from_center: Vector2, velocity: Vector2) -> void:
 	var b: BulletPlayer = bullet_scene.instantiate() as BulletPlayer
 	if b == null:
 		return
+	b.velocity = velocity
+	b.pierce = false
+	b.damage = 10.0
 	bullet_parent.add_child(b)
 	b.global_position = global_position + offset_from_center + Vector2(0.0, -16.0)
-	b.velocity = Vector2(0.0, -900.0)
-	b.pierce = use_pierce or as_beam
-	b.damage = maxi(1, beam_damage) if as_beam else 1
-	if as_beam:
-		b.configure_as_beam()
+
+
+func _spawn_beam_line(offset_from_center: Vector2) -> void:
+	if beam_line_scene == null:
+		return
+	var beam: PlayerBeamLine = beam_line_scene.instantiate() as PlayerBeamLine
+	if beam == null:
+		return
+	beam.setup(self, offset_from_center + Vector2(0.0, -16.0))
+	bullet_parent.add_child(beam)
 
 
 func has_active_weapon_perk() -> bool:
@@ -202,8 +220,18 @@ func get_weapon_perk_kind() -> WeaponPickup.PerkKind:
 			return WeaponPickup.PerkKind.TRIPLE_STRAIGHT
 		WeaponMode.BEAM:
 			return WeaponPickup.PerkKind.BEAM
+		WeaponMode.CROSS_FIRE:
+			return WeaponPickup.PerkKind.CROSS_FIRE
 		_:
 			return WeaponPickup.PerkKind.DOUBLE_STRAIGHT
+
+
+func get_weapon_perk_time_ratio() -> float:
+	if weapon_mode == WeaponMode.SINGLE:
+		return 0.0
+	if weapon_perk_duration_sec <= 0.0:
+		return 0.0
+	return clampf(_weapon_perk_time_left / weapon_perk_duration_sec, 0.0, 1.0)
 
 
 func refresh_weapon_perk_timer() -> void:
@@ -220,19 +248,20 @@ func apply_weapon_pickup(kind: WeaponPickup.PerkKind) -> void:
 			weapon_mode = WeaponMode.TRIPLE_STRAIGHT
 		WeaponPickup.PerkKind.BEAM:
 			weapon_mode = WeaponMode.BEAM
+		WeaponPickup.PerkKind.CROSS_FIRE:
+			weapon_mode = WeaponMode.CROSS_FIRE
 	_weapon_perk_time_left = maxf(0.0, weapon_perk_duration_sec)
 
 
-func _spawn_muzzle_flash(at_pos: Vector2) -> void:
+func _spawn_muzzle_flash(local_offset: Vector2) -> void:
 	if muzzle_flash_scene == null:
-		return
-	if bullet_parent == null:
 		return
 	var fx: Node2D = muzzle_flash_scene.instantiate() as Node2D
 	if fx == null:
 		return
-	bullet_parent.add_child(fx)
-	fx.global_position = at_pos
+	# Parent to the player so the flash follows player motion.
+	add_child(fx)
+	fx.position = local_offset
 
 
 func _draw() -> void:
@@ -254,16 +283,16 @@ func _on_area_entered(area: Area2D) -> void:
 		if enemy_bullet != null:
 			_take_damage(enemy_bullet.damage)
 		else:
-			_take_damage(1)
+			_take_damage(10.0)
 	elif area.is_in_group(Defs.GROUP_ENEMY):
-		_take_damage(1)
+		_take_damage(10.0)
 
 
-func _take_damage(amount: int) -> void:
-	if amount <= 0:
+func _take_damage(amount: float) -> void:
+	if amount <= 0.0:
 		return
 	_invuln = i_frames
-	hp = maxi(0, hp - amount)
+	hp = maxf(0.0, hp - amount)
 	health_changed.emit(hp, max_hp)
 	queue_redraw()
 	if hp <= 0:

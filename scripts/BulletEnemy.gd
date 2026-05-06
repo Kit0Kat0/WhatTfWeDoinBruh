@@ -5,7 +5,7 @@ class_name BulletEnemy
 @export var radius: float = 5.0
 
 var velocity: Vector2 = Vector2.ZERO
-var damage: int = 1
+var damage: float = 10.0
 var wave_axis: Vector2 = Vector2.ZERO
 var wave_amplitude: float = 0.0
 var wave_frequency: float = 0.0

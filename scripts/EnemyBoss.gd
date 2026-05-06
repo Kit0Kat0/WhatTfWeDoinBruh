@@ -1,44 +1,64 @@
 extends Area2D
 class_name EnemyBoss
 
-@export var hp: int = 160
-@export var horizontal_speed: float = 95.0
-@export var entry_speed: float = 140.0
-## Boss sits in the top lane: center Y = playfield top + radius + this margin.
-@export var top_lane_margin: float = 36.0
+const OFFSCREEN_SPEED_CAP: float = EnemyBasic.OFFSCREEN_SPEED_CAP
+
+signal health_changed(current_hp: float, max_hp: float)
+
+@export var max_hp: float = 1600.0
+var hp: float = 1600.0
+@export var path_follow_speed: float = 190.0
 @export var radius: float = 78.0
 @export var shot_interval: float = 0.35
+@export var shot_interval_jitter_ratio: float = 0.35
+@export var shot_interval_min_sec: float = 0.1
 ## Straight-down volleys (normal-style): speed + damage.
 @export var normal_bullet_speed: float = 280.0
-@export var normal_bullet_damage: int = 2
+@export var normal_bullet_damage: float = 20.0
 ## Three-way spread volleys (tanky-style): slower, harder-hitting.
 @export var tank_bullet_speed: float = 200.0
-@export var tank_bullet_damage: int = 3
+@export var tank_bullet_damage: float = 30.0
 @export var tank_spread_angle_degrees: float = 14.0
+@export var follow_path_rotation: bool = false
+@export var damage_flash_duration_sec: float = 0.1
 
 var playfield_rect: Rect2
 var bullet_scene: PackedScene
 var bullet_parent: Node
+var path_motion: EnemyPathMotion
 
-var _shot_t: float = 0.0
-var _x_dir: float = 1.0
-var _target_y: float = 0.0
+var _fire_cooldown: float = 0.0
 var _pattern_volley: int = 0
+var _damage_flash_remaining: float = 0.0
+var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+
+
+func _is_on_screen(margin: float = 24.0) -> bool:
+	if playfield_rect.size == Vector2.ZERO:
+		return true
+	return playfield_rect.grow(margin).has_point(global_position)
+
+func _offscreen_speed(base_speed: float) -> float:
+	var boosted: float = minf(base_speed * 2.0, OFFSCREEN_SPEED_CAP)
+	return base_speed if boosted < base_speed else boosted
+
+
+func _with_hit_flash(c: Color) -> Color:
+	if _damage_flash_remaining <= 0.0 or damage_flash_duration_sec <= 0.0:
+		return c
+	var t: float = clampf(_damage_flash_remaining / damage_flash_duration_sec, 0.0, 1.0)
+	return c.lerp(Color(1.0, 1.0, 1.0, c.a), t)
 
 
 func _ready() -> void:
 	add_to_group(Defs.GROUP_ENEMY)
 	area_entered.connect(_on_area_entered)
-	_recompute_target_y()
+	hp = max_hp
+	_rng.randomize()
+	_fire_cooldown = _rng.randf_range(0.0, shot_interval)
 	_sync_collision_radius()
 	queue_redraw()
-
-
-func _recompute_target_y() -> void:
-	if playfield_rect.size == Vector2.ZERO:
-		_target_y = global_position.y
-		return
-	_target_y = playfield_rect.position.y + radius + top_lane_margin
+	health_changed.emit(hp, max_hp)
 
 
 func _sync_collision_radius() -> void:
@@ -48,29 +68,24 @@ func _sync_collision_radius() -> void:
 
 
 func _process(delta: float) -> void:
-	_recompute_target_y()
+	if _damage_flash_remaining > 0.0:
+		_damage_flash_remaining = maxf(0.0, _damage_flash_remaining - delta)
+		queue_redraw()
 
-	if global_position.y < _target_y:
-		global_position.y = minf(_target_y, global_position.y + entry_speed * delta)
-	else:
-		global_position.y = _target_y
+	var effective_speed: float = path_follow_speed
+	if not _is_on_screen(48.0):
+		effective_speed = _offscreen_speed(path_follow_speed)
+	if path_motion != null:
+		path_motion.advance(delta, effective_speed)
+		path_motion.apply_to(self, follow_path_rotation)
 
-	global_position.x += _x_dir * horizontal_speed * delta
-	_shot_t += delta
-
-	if playfield_rect.size != Vector2.ZERO:
-		var x_min: float = playfield_rect.position.x + radius
-		var x_max: float = playfield_rect.end.x - radius
-		if global_position.x <= x_min:
-			global_position.x = x_min
-			_x_dir = 1.0
-		elif global_position.x >= x_max:
-			global_position.x = x_max
-			_x_dir = -1.0
-
-	if _shot_t >= shot_interval:
-		_shot_t = 0.0
-		_fire_mixed_pattern_volley()
+	_fire_cooldown -= delta
+	if _fire_cooldown <= 0.0:
+		var span: float = shot_interval * shot_interval_jitter_ratio
+		var next_interval: float = shot_interval + _rng.randf_range(-span, span)
+		_fire_cooldown = maxf(shot_interval_min_sec, next_interval)
+		if _is_on_screen(48.0):
+			_fire_mixed_pattern_volley()
 
 
 func _fire_mixed_pattern_volley() -> void:
@@ -92,7 +107,7 @@ func _fire_normal_forward() -> void:
 	bullet_parent.add_child(b)
 	b.global_position = global_position + Vector2(0.0, radius * 0.35)
 	b.velocity = Vector2.DOWN * normal_bullet_speed
-	b.damage = maxi(1, normal_bullet_damage)
+	b.damage = maxf(1.0, normal_bullet_damage)
 
 
 func _fire_tanky_spread() -> void:
@@ -109,25 +124,49 @@ func _fire_tanky_spread() -> void:
 		bullet_parent.add_child(b)
 		b.global_position = global_position + d * (radius * 0.35)
 		b.velocity = d * tank_bullet_speed
-		b.damage = maxi(1, tank_bullet_damage)
+		b.damage = maxf(1.0, tank_bullet_damage)
 
 
 func _draw() -> void:
 	var rim: float = maxf(10.0, radius * 0.22)
 	var core: float = maxf(6.0, radius * 0.11)
-	draw_circle(Vector2.ZERO, radius, Color(0.85, 0.2, 0.25, 1.0))
-	draw_circle(Vector2.ZERO, maxf(1.0, radius - rim), Color(0.25, 0.05, 0.08, 1.0))
-	draw_circle(Vector2.ZERO, core, Color(1.0, 0.92, 0.35, 1.0))
+	draw_circle(Vector2.ZERO, radius, _with_hit_flash(Color(0.85, 0.2, 0.25, 1.0)))
+	draw_circle(Vector2.ZERO, maxf(1.0, radius - rim), _with_hit_flash(Color(0.25, 0.05, 0.08, 1.0)))
+	draw_circle(Vector2.ZERO, core, _with_hit_flash(Color(1.0, 0.92, 0.35, 1.0)))
+
+
+func apply_beam_damage(amount: float) -> void:
+	if amount <= 0.0:
+		return
+	hp -= amount
+	if hp <= 0:
+		hp = 0
+		health_changed.emit(hp, max_hp)
+		AudioManager.play_sfx("boss_death")
+		AudioManager.duck_music(6.0, 0.3, 0.7)
+		for n in get_tree().get_nodes_in_group("game_controller"):
+			if n.has_method("try_spawn_weapon_pickup"):
+				n.call("try_spawn_weapon_pickup", global_position, true)
+				break
+		queue_free()
+	else:
+		health_changed.emit(hp, max_hp)
+		_damage_flash_remaining = damage_flash_duration_sec
+		queue_redraw()
+		if int(hp) % 50 == 0:
+			AudioManager.play_sfx("boss_hit")
 
 
 func _on_area_entered(area: Area2D) -> void:
 	if area.is_in_group(Defs.GROUP_PLAYER_BULLET):
-		var dmg: int = 1
+		var dmg: float = 10.0
 		var pb: BulletPlayer = area as BulletPlayer
 		if pb != null:
-			dmg = maxi(1, pb.damage)
+			dmg = maxf(1.0, pb.damage)
 		hp -= dmg
 		if hp <= 0:
+			hp = 0
+			health_changed.emit(hp, max_hp)
 			AudioManager.play_sfx("boss_death")
 			AudioManager.duck_music(6.0, 0.3, 0.7)
 			for n in get_tree().get_nodes_in_group("game_controller"):
@@ -135,5 +174,9 @@ func _on_area_entered(area: Area2D) -> void:
 					n.call("try_spawn_weapon_pickup", global_position, true)
 					break
 			queue_free()
-		elif hp % 5 == 0:
-			AudioManager.play_sfx("boss_hit")
+		else:
+			health_changed.emit(hp, max_hp)
+			_damage_flash_remaining = damage_flash_duration_sec
+			queue_redraw()
+			if int(hp) % 50 == 0:
+				AudioManager.play_sfx("boss_hit")

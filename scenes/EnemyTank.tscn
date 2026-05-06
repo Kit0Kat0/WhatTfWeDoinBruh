@@ -1,22 +1,21 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://bade5mimgducc"]
 
-[ext_resource type="Script" path="res://scripts/EnemyTank.gd" id="1_tank_script"]
+[ext_resource type="Script" uid="uid://ino6c72pv4q2" path="res://scripts/EnemyTank.gd" id="1_tank_script"]
 
 [sub_resource type="CircleShape2D" id="1_circle"]
 radius = 20.0
 
-[node name="EnemyTank" type="Area2D"]
+[node name="EnemyTank" type="Area2D" unique_id=1288869455]
 collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_tank_script")
-hp = 18
-speed = 75.0
+hp = 180.0
+speed = 150.0
 horizontal_speed = 52.0
-shot_interval = 1.35
+shot_interval = 1.8
 bullet_speed = 180.0
-bullet_damage = 3
 radius = 20.0
 shot_sfx_id = "enemy_tank_shot"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1442422461]
 shape = SubResource("1_circle")
