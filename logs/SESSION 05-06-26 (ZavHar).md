@@ -1,0 +1,22 @@
+## 05/06/26 - ZavHar (enemy visuals + flash upgrade)
+
+### What changed
+  - Swapped enemy visuals from debug draw / placeholders to Craftpix run-cycle sprites:
+    - `EnemyBasic`, `EnemyTank`, `EnemySpeedster`: `AnimatedSprite2D` + `SpriteFrames` (6-frame loop from `RunSD.png` sheets).
+    - `EnemyBoss`: sprite-based presentation (Craftpix DropPod as current placeholder).
+  - Added `shaders/flash_tint.gdshader` and moved the damage flash to a **shader uniform** (`flash`) so the hit flash reads crisp without destroying the palette tint.
+  - Fixed “whole group flashes at once” by **duplicating the `ShaderMaterial` per enemy instance** on `_ready()`.
+  - Preserved original perceived enemy sizes by scaling sprites based on **non-transparent pixel bounds** (alpha scan) instead of the full 48×48 frame padding.
+  - Added a simple Virus vs Antivirus palette surface (`faction`, `virus_color`, `antivirus_color`) to keep tinting consistent.
+
+### Why
+  - To make enemies readable and lively with minimal art overhead, while keeping gameplay tuning stable (enemy collision radius / threat size stays consistent).
+
+### Any pitfalls / fixes
+  - Craftpix sprites are already colored; tinting is a hue-shift rather than a full recolor. For a “hard” palette swap later, we’ll want neutral/white sprites or a palette shader.
+  - The visible-bounds scan is cached per atlas-region key so it’s not expensive per frame.
+
+### Any thing important to mention if another AI agent were to move forward
+  - If new enemies use `ShaderMaterial` flash, ensure the material is duplicated per instance to avoid shared-uniform bugs.
+  - If spritesheets change frame sizes, update the atlas regions in the enemy scenes accordingly (current Craftpix run sheets are 6×48px frames).
+

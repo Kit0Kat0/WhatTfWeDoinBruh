@@ -26,8 +26,3 @@ func _fire_forward() -> void:
 
 	if shot_sfx_id != "":
 		AudioManager.play_sfx(shot_sfx_id)
-
-
-func _draw() -> void:
-	draw_circle(Vector2.ZERO, radius, _with_hit_flash(Color(0.45, 0.8, 0.35, 1.0)))
-	draw_circle(Vector2.ZERO, maxf(1.0, radius - 5.0), _with_hit_flash(Color(0.15, 0.25, 0.1, 1.0)))

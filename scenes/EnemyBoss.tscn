@@ -1,14 +1,31 @@
-[gd_scene format=3 uid="uid://b0ydb1hgsaue0"]
+[gd_scene load_steps=6 format=3 uid="uid://b0ydb1hgsaue0"]
 
 [ext_resource type="Script" uid="uid://d2gc1htp07sdx" path="res://scripts/EnemyBoss.gd" id="1_boss_script"]
+[ext_resource type="Texture2D" path="res://Assets/craftpix-net-814823-free-roguelike-shoot-em-up-pixel-art-game-kit/3 Enemies/8 Other/DropPod2.png" id="2_boss_tex"]
+[ext_resource type="Shader" path="res://shaders/flash_tint.gdshader" id="3_flash_shader"]
 
 [sub_resource type="CircleShape2D" id="1_circle"]
 radius = 78.0
+
+[sub_resource type="AtlasTexture" id="2_boss_frame"]
+atlas = ExtResource("2_boss_tex")
+region = Rect2(0, 0, 32, 45)
+
+[sub_resource type="ShaderMaterial" id="3_boss_mat"]
+shader = ExtResource("3_flash_shader")
+shader_parameter/tint_color = Color(1, 1, 1, 1)
+shader_parameter/flash = 0.0
 
 [node name="EnemyBoss" type="Area2D" unique_id=82860786]
 collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_boss_script")
+virus_color = Color(1, 0.15, 0.25, 1)
+antivirus_color = Color(0.25, 0.85, 1, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1879573072]
 shape = SubResource("1_circle")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = SubResource("2_boss_frame")
+material = SubResource("3_boss_mat")

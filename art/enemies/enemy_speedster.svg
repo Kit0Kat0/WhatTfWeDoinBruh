@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Slim "speedster": diamond + motion ticks -->
+  <g fill="#ffffff">
+    <path d="M32 10 L48 32 L32 54 L16 32 Z"/>
+    <path d="M32 18 L42 32 L32 46 L22 32 Z" fill="#000000" opacity="0.18"/>
+    <rect x="6" y="22" width="10" height="4" rx="2" opacity="0.55"/>
+    <rect x="6" y="30" width="14" height="4" rx="2" opacity="0.45"/>
+    <rect x="6" y="38" width="10" height="4" rx="2" opacity="0.35"/>
+  </g>
+</svg>

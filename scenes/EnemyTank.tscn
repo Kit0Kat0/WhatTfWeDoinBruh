@@ -1,9 +1,48 @@
-[gd_scene format=3 uid="uid://bade5mimgducc"]
+[gd_scene load_steps=20 format=3 uid="uid://bade5mimgducc"]
 
 [ext_resource type="Script" uid="uid://ino6c72pv4q2" path="res://scripts/EnemyTank.gd" id="1_tank_script"]
+[ext_resource type="Texture2D" path="res://Assets/craftpix-net-814823-free-roguelike-shoot-em-up-pixel-art-game-kit/3 Enemies/6/RunSD.png" id="2_tank_sheet"]
+[ext_resource type="Shader" path="res://shaders/flash_tint.gdshader" id="3_flash_shader"]
 
 [sub_resource type="CircleShape2D" id="1_circle"]
 radius = 20.0
+
+[sub_resource type="AtlasTexture" id="2_tank_frame"]
+atlas = ExtResource("2_tank_sheet")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="3_tank_frame"]
+atlas = ExtResource("2_tank_sheet")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="4_tank_frame"]
+atlas = ExtResource("2_tank_sheet")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="5_tank_frame"]
+atlas = ExtResource("2_tank_sheet")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="6_tank_frame"]
+atlas = ExtResource("2_tank_sheet")
+region = Rect2(192, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="7_tank_frame"]
+atlas = ExtResource("2_tank_sheet")
+region = Rect2(240, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="8_tank_frames"]
+animations = [{
+"frames": [SubResource("2_tank_frame"), SubResource("3_tank_frame"), SubResource("4_tank_frame"), SubResource("5_tank_frame"), SubResource("6_tank_frame"), SubResource("7_tank_frame")],
+"loop": true,
+"name": &"run",
+"speed": 8.0
+}]
+
+[sub_resource type="ShaderMaterial" id="9_tank_mat"]
+shader = ExtResource("3_flash_shader")
+shader_parameter/tint_color = Color(1, 1, 1, 1)
+shader_parameter/flash = 0.0
 
 [node name="EnemyTank" type="Area2D" unique_id=1288869455]
 collision_layer = 2
@@ -15,7 +54,15 @@ horizontal_speed = 52.0
 shot_interval = 1.8
 bullet_speed = 180.0
 radius = 20.0
+virus_color = Color(0.45, 0.8, 0.35, 1)
+antivirus_color = Color(0.25, 0.9, 0.8, 1)
 shot_sfx_id = "enemy_tank_shot"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1442422461]
 shape = SubResource("1_circle")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("8_tank_frames")
+animation = &"run"
+playing = true
+material = SubResource("9_tank_mat")

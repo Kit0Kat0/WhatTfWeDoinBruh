@@ -1,15 +1,62 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/EnemyBasic.gd" id="1_enemy_script"]
+[ext_resource type="Texture2D" path="res://Assets/craftpix-net-814823-free-roguelike-shoot-em-up-pixel-art-game-kit/3 Enemies/4/RunSD.png" id="2_enemy_sheet"]
+[ext_resource type="Shader" path="res://shaders/flash_tint.gdshader" id="3_flash_shader"]
 
 [sub_resource type="CircleShape2D" id="1_circle"]
 radius = 14.0
+
+[sub_resource type="AtlasTexture" id="2_enemy_frame"]
+atlas = ExtResource("2_enemy_sheet")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="3_enemy_frame"]
+atlas = ExtResource("2_enemy_sheet")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="4_enemy_frame"]
+atlas = ExtResource("2_enemy_sheet")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="5_enemy_frame"]
+atlas = ExtResource("2_enemy_sheet")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="6_enemy_frame"]
+atlas = ExtResource("2_enemy_sheet")
+region = Rect2(192, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="7_enemy_frame"]
+atlas = ExtResource("2_enemy_sheet")
+region = Rect2(240, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="8_enemy_frames"]
+animations = [{
+"frames": [SubResource("2_enemy_frame"), SubResource("3_enemy_frame"), SubResource("4_enemy_frame"), SubResource("5_enemy_frame"), SubResource("6_enemy_frame"), SubResource("7_enemy_frame")],
+"loop": true,
+"name": &"run",
+"speed": 10.0
+}]
+
+[sub_resource type="ShaderMaterial" id="9_enemy_mat"]
+shader = ExtResource("3_flash_shader")
+shader_parameter/tint_color = Color(1, 1, 1, 1)
+shader_parameter/flash = 0.0
 
 [node name="EnemyBasic" type="Area2D"]
 collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_enemy_script")
+virus_color = Color(0.95, 0.2, 0.85, 1)
+antivirus_color = Color(0.25, 0.95, 1, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1_circle")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("8_enemy_frames")
+animation = &"run"
+playing = true
+material = SubResource("9_enemy_mat")
 

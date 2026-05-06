@@ -1,8 +1,48 @@
-[gd_scene format=3 uid="uid://cde8xd36uklto"]
+[gd_scene load_steps=20 format=3 uid="uid://cde8xd36uklto"]
 
 [ext_resource type="Script" uid="uid://burcmco27p6yx" path="res://scripts/EnemySpeedster.gd" id="1_speedster_script"]
+[ext_resource type="Texture2D" path="res://Assets/craftpix-net-814823-free-roguelike-shoot-em-up-pixel-art-game-kit/3 Enemies/1/RunSD.png" id="2_speed_sheet"]
+[ext_resource type="Shader" path="res://shaders/flash_tint.gdshader" id="3_flash_shader"]
 
 [sub_resource type="CircleShape2D" id="1_circle"]
+radius = 10.0
+
+[sub_resource type="AtlasTexture" id="2_speed_frame"]
+atlas = ExtResource("2_speed_sheet")
+region = Rect2(0, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="3_speed_frame"]
+atlas = ExtResource("2_speed_sheet")
+region = Rect2(48, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="4_speed_frame"]
+atlas = ExtResource("2_speed_sheet")
+region = Rect2(96, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="5_speed_frame"]
+atlas = ExtResource("2_speed_sheet")
+region = Rect2(144, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="6_speed_frame"]
+atlas = ExtResource("2_speed_sheet")
+region = Rect2(192, 0, 48, 48)
+
+[sub_resource type="AtlasTexture" id="7_speed_frame"]
+atlas = ExtResource("2_speed_sheet")
+region = Rect2(240, 0, 48, 48)
+
+[sub_resource type="SpriteFrames" id="8_speed_frames"]
+animations = [{
+"frames": [SubResource("2_speed_frame"), SubResource("3_speed_frame"), SubResource("4_speed_frame"), SubResource("5_speed_frame"), SubResource("6_speed_frame"), SubResource("7_speed_frame")],
+"loop": true,
+"name": &"run",
+"speed": 12.0
+}]
+
+[sub_resource type="ShaderMaterial" id="9_speed_mat"]
+shader = ExtResource("3_flash_shader")
+shader_parameter/tint_color = Color(1, 1, 1, 1)
+shader_parameter/flash = 0.0
 
 [node name="EnemySpeedster" type="Area2D" unique_id=1182570388]
 collision_layer = 2
@@ -14,7 +54,15 @@ horizontal_speed = 150.0
 shot_interval = 1.2
 bullet_speed = 260.0
 radius = 10.0
+virus_color = Color(0.9, 0.5, 1, 1)
+antivirus_color = Color(0.35, 0.55, 1.0, 1)
 shot_sfx_id = "enemy_speedster_shot"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1055981317]
 shape = SubResource("1_circle")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("8_speed_frames")
+animation = &"run"
+playing = true
+material = SubResource("9_speed_mat")

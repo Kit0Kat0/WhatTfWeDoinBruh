@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Boss: big core + ring + warning eye -->
+  <g fill="#ffffff">
+    <circle cx="64" cy="64" r="46" opacity="0.95"/>
+    <circle cx="64" cy="64" r="34" fill="#000000" opacity="0.18"/>
+    <circle cx="64" cy="64" r="14" opacity="0.22"/>
+    <path d="M64 34 C86 34 98 52 98 64 C98 76 86 94 64 94 C42 94 30 76 30 64 C30 52 42 34 64 34 Z" fill="#ffffff" opacity="0.12"/>
+  </g>
+</svg>

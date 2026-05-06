@@ -312,6 +312,18 @@
 - **Fix:** Default `boss_every_n_waves` to 7; boss alternates straight-down shots (normal tuning) with tank-style 3-bullet spreads (separate speed/damage/spread exports).
 - **Files:** `scripts/EnemySpawner.gd`, `scripts/EnemyBoss.gd`, `docs/GAME_OVERVIEW.md`, `docs/AUDIO_GUIDE.md`, `logs/SESSION 05-05-26 (Codex).md`.
 
+### Enemy visuals: Craftpix run cycles + shader hit flash (05/06/26)
+
+- **Prompt:** Replace placeholder enemy sprites, animate them, preserve original perceived size, and improve hit flash so it’s per-enemy not global.
+- **Symptom:** Enemy sprites read small due to transparent padding; hit flash could apply to the entire enemy group due to shared material resources.
+- **Cause:** Craftpix frames include large transparent margins; shared `ShaderMaterial` subresource meant all instances wrote to the same uniform.
+- **Fix:**
+  - Switched enemies to Craftpix `3 Enemies/*/RunSD.png` sheets with `AnimatedSprite2D` + `SpriteFrames` (6-frame run loop).
+  - Preserved perceived size by scaling sprites based on **non-transparent pixel bounds** (alpha scan cached per atlas-region key) instead of the full 48×48 cell.
+  - Replaced draw-based flash with a shader (`shaders/flash_tint.gdshader`) supporting `tint_color` + `flash`, and duplicated the material per instance so hits flash independently.
+  - Introduced a simple Virus vs Antivirus palette (`faction`, `virus_color`, `antivirus_color`) so enemy tinting is consistent.
+- **Files:** `scenes/EnemyBasic.tscn`, `scenes/EnemyTank.tscn`, `scenes/EnemySpeedster.tscn`, `scenes/EnemyBoss.tscn`, `scripts/EnemyBasic.gd`, `scripts/EnemyTank.gd`, `scripts/EnemySpeedster.gd`, `scripts/EnemyBoss.gd`, `shaders/flash_tint.gdshader`, `art/enemies/*`.
+
 ## Adding new entries
 
 Copy/paste under **Entries**:
