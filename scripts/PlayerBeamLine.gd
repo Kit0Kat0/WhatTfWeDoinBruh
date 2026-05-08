@@ -3,6 +3,7 @@ class_name PlayerBeamLine
 
 const MAX_ARC_LENGTH_PX: float = 250.0
 const DPS: float = 100.0
+const INITIAL_HIT_DAMAGE: float = 10.0
 const SCROLL_SPEED: float = 900.0
 const BEAM_HALF_WIDTH: float = 8.0
 const OFFSCREEN_MARGIN: float = 64.0
@@ -10,9 +11,11 @@ const OFFSCREEN_MARGIN: float = 64.0
 var _player_wr: WeakRef
 ## Combined offset from player origin to muzzle (same frame as `Player._spawn_player_bullet`).
 var _muzzle_offset_from_player: Vector2 = Vector2.ZERO
+var _damage_scale: float = 1.0
 
 var _points: PackedVector2Array = PackedVector2Array()
 var _done_extending: bool = false
+var _overlapping_enemy_ids: Dictionary = {} # instance_id -> true
 
 @onready var _line: Line2D = $Line2D
 @onready var _damage_area: Area2D = $DamageArea
@@ -22,6 +25,8 @@ var _done_extending: bool = false
 func setup(player: Player, muzzle_offset_from_player: Vector2) -> void:
 	_player_wr = weakref(player)
 	_muzzle_offset_from_player = muzzle_offset_from_player
+	if player != null:
+		_damage_scale = maxf(0.1, player.get_bullet_damage()) / 10.0
 
 
 func _physics_process(delta: float) -> void:
@@ -126,12 +131,19 @@ func _apply_dps(delta: float) -> void:
 		return
 	_damage_area.force_update_transform()
 	var overlapping: Array[Area2D] = _damage_area.get_overlapping_areas()
+	var now_ids: Dictionary = {}
 	for area in overlapping:
 		if not area.is_in_group(Defs.GROUP_ENEMY):
 			continue
 		if not is_instance_valid(area):
 			continue
-		_apply_damage(area, DPS * delta)
+		var id: int = area.get_instance_id()
+		now_ids[id] = true
+		# First frame of contact: apply a full "base bullet" hit instantly.
+		if not _overlapping_enemy_ids.has(id):
+			_apply_damage(area, INITIAL_HIT_DAMAGE * _damage_scale)
+		_apply_damage(area, DPS * delta * _damage_scale)
+	_overlapping_enemy_ids = now_ids
 
 
 func _apply_damage(area: Area2D, amount: float) -> void:

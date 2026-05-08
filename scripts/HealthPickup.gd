@@ -1,15 +1,13 @@
 extends Area2D
-class_name WeaponPickup
-
-enum PerkKind { DOUBLE_STRAIGHT, TRIPLE_STRAIGHT, BEAM, CROSS_FIRE }
+class_name HealthPickup
 
 const ZERO_DAY_ASCENT_SPEED_MULT: float = 5.0
 const BASE_FALL_SPEED: float = 55.0
 
+## Heal amount as a fraction of the player's current max HP (e.g. 0.1 = 10%).
+@export var heal_fraction_of_max: float = 0.05
 @export var fall_speed: float = 55.0
 @export var life_seconds: float = 14.0
-
-var perk_kind: PerkKind = PerkKind.DOUBLE_STRAIGHT
 
 var _life: float = 0.0
 var _playfield_rect: Rect2 = Rect2()
@@ -17,7 +15,7 @@ var _zero_day_ascending: bool = false
 
 
 func _ready() -> void:
-	add_to_group(Defs.GROUP_WEAPON_PICKUP)
+	add_to_group(Defs.GROUP_HEALTH_PICKUP)
 	area_entered.connect(_on_area_entered)
 	_life = life_seconds
 	monitoring = true
@@ -25,8 +23,7 @@ func _ready() -> void:
 	queue_redraw()
 
 
-func setup(kind: PerkKind, playfield: Rect2) -> void:
-	perk_kind = kind
+func setup(playfield: Rect2) -> void:
 	_playfield_rect = playfield
 
 
@@ -67,18 +64,17 @@ func _on_area_entered(area: Area2D) -> void:
 	var p: Player = area as Player
 	if p == null:
 		return
-	p.apply_weapon_pickup(perk_kind)
+	p.heal_by_max_hp_fraction(heal_fraction_of_max)
 	queue_free()
 
 
 func _draw() -> void:
-	var col: Color = Color(0.45, 0.95, 1.0, 0.95)
-	match perk_kind:
-		PerkKind.TRIPLE_STRAIGHT:
-			col = Color(0.95, 0.45, 1.0, 0.95)
-		PerkKind.BEAM:
-			col = Color(1.0, 0.82, 0.25, 0.95)
-		PerkKind.CROSS_FIRE:
-			col = Color(0.35, 1.0, 0.45, 0.95)
-	draw_circle(Vector2.ZERO, 12.0, col)
-	draw_arc(Vector2.ZERO, 12.0, 0.0, TAU, 32, Color(1, 1, 1, 0.5), 2.0, true)
+	var arm: float = 10.5
+	var thickness: float = 3.5
+	var stroke: Color = Color(0.05, 0.22, 0.1, 0.92)
+	var fill_col: Color = Color(0.32, 0.9, 0.48, 0.98)
+	# Slight outline so it reads on dark backgrounds.
+	draw_line(Vector2(-arm, 0.0), Vector2(arm, 0.0), stroke, thickness + 2.0, true)
+	draw_line(Vector2(0.0, -arm), Vector2(0.0, arm), stroke, thickness + 2.0, true)
+	draw_line(Vector2(-arm, 0.0), Vector2(arm, 0.0), fill_col, thickness, true)
+	draw_line(Vector2(0.0, -arm), Vector2(0.0, arm), fill_col, thickness, true)

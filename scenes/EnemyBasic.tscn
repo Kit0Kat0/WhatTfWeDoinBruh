@@ -1,11 +1,16 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene format=3 uid="uid://bug68yigia2jh"]
 
-[ext_resource type="Script" path="res://scripts/EnemyBasic.gd" id="1_enemy_script"]
-[ext_resource type="Texture2D" path="res://Assets/craftpix-net-814823-free-roguelike-shoot-em-up-pixel-art-game-kit/3 Enemies/4/RunSD.png" id="2_enemy_sheet"]
-[ext_resource type="Shader" path="res://shaders/flash_tint.gdshader" id="3_flash_shader"]
+[ext_resource type="Script" uid="uid://cnb4wopao1uhe" path="res://scripts/EnemyBasic.gd" id="1_enemy_script"]
+[ext_resource type="Texture2D" uid="uid://b6rk3ryiarjtw" path="res://Assets/craftpix-net-814823-free-roguelike-shoot-em-up-pixel-art-game-kit/3 Enemies/4/RunSD.png" id="2_enemy_sheet"]
+[ext_resource type="Shader" uid="uid://dihwsk1kijae" path="res://shaders/flash_tint.gdshader" id="3_flash_shader"]
 
 [sub_resource type="CircleShape2D" id="1_circle"]
 radius = 14.0
+
+[sub_resource type="ShaderMaterial" id="9_enemy_mat"]
+shader = ExtResource("3_flash_shader")
+shader_parameter/tint_color = Color(1, 1, 1, 1)
+shader_parameter/flash = 0.0
 
 [sub_resource type="AtlasTexture" id="2_enemy_frame"]
 atlas = ExtResource("2_enemy_sheet")
@@ -33,30 +38,40 @@ region = Rect2(240, 0, 48, 48)
 
 [sub_resource type="SpriteFrames" id="8_enemy_frames"]
 animations = [{
-"frames": [SubResource("2_enemy_frame"), SubResource("3_enemy_frame"), SubResource("4_enemy_frame"), SubResource("5_enemy_frame"), SubResource("6_enemy_frame"), SubResource("7_enemy_frame")],
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("2_enemy_frame")
+}, {
+"duration": 1.0,
+"texture": SubResource("3_enemy_frame")
+}, {
+"duration": 1.0,
+"texture": SubResource("4_enemy_frame")
+}, {
+"duration": 1.0,
+"texture": SubResource("5_enemy_frame")
+}, {
+"duration": 1.0,
+"texture": SubResource("6_enemy_frame")
+}, {
+"duration": 1.0,
+"texture": SubResource("7_enemy_frame")
+}],
 "loop": true,
 "name": &"run",
 "speed": 10.0
 }]
 
-[sub_resource type="ShaderMaterial" id="9_enemy_mat"]
-shader = ExtResource("3_flash_shader")
-shader_parameter/tint_color = Color(1, 1, 1, 1)
-shader_parameter/flash = 0.0
-
-[node name="EnemyBasic" type="Area2D"]
+[node name="EnemyBasic" type="Area2D" unique_id=1241235221]
 collision_layer = 2
 collision_mask = 5
 script = ExtResource("1_enemy_script")
-virus_color = Color(0.95, 0.2, 0.85, 1)
-antivirus_color = Color(0.25, 0.95, 1, 1)
+bullet_size_scale = 0.5
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1628168099]
 shape = SubResource("1_circle")
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=348075381]
+material = SubResource("9_enemy_mat")
 sprite_frames = SubResource("8_enemy_frames")
 animation = &"run"
-playing = true
-material = SubResource("9_enemy_mat")
-

@@ -1,0 +1,37 @@
+[gd_scene load_steps=6 format=3 uid="uid://enemy_siege_boss"]
+
+[ext_resource type="Script" path="res://scripts/EnemySiegeBoss.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://Assets/craftpix-net-814823-free-roguelike-shoot-em-up-pixel-art-game-kit/3 Enemies/8 Other/DropPod2.png" id="2_tex"]
+[ext_resource type="Shader" path="res://shaders/flash_tint.gdshader" id="3_shader"]
+
+[sub_resource type="CircleShape2D" id="1_circle"]
+radius = 78.0
+
+[sub_resource type="AtlasTexture" id="2_atlas"]
+atlas = ExtResource("2_tex")
+region = Rect2(0, 0, 32, 45)
+
+[sub_resource type="ShaderMaterial" id="3_mat"]
+shader = ExtResource("3_shader")
+shader_parameter/tint_color = Color(1, 1, 1, 1)
+shader_parameter/flash = 0.0
+
+[node name="EnemySiegeBoss" type="Area2D"]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_script")
+max_hp = 2350.0
+shot_interval = 0.78
+shot_interval_jitter_ratio = 0.28
+shot_interval_min_sec = 0.18
+normal_bullet_damage = 22.0
+tank_bullet_damage = 28.0
+virus_color = Color(0.95, 0.42, 0.12, 1)
+antivirus_color = Color(0.35, 0.82, 1, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("1_circle")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = SubResource("2_atlas")
+material = SubResource("3_mat")

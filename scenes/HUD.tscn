@@ -1,14 +1,9 @@
 [gd_scene format=3 uid="uid://cqk2iuxjdkcoo"]
 
 [ext_resource type="Script" uid="uid://b7lub0xdty1vb" path="res://scripts/HUD.gd" id="1_hud_script"]
-
-[sub_resource type="Gradient" id="Gradient_boss_under"]
-colors = PackedColorArray(0, 0, 0, 0.85882354, 0, 0, 0, 0.8784314)
-
-[sub_resource type="GradientTexture2D" id="Texture_under"]
-gradient = SubResource("Gradient_boss_under")
-width = 16
-height = 16
+[ext_resource type="Script" uid="uid://dqpmegves5i7e" path="res://scripts/HudMetaXpBar.gd" id="2_xpbar_script"]
+[ext_resource type="Script" uid="uid://0i10xvrs4n5k" path="res://scripts/HudRadialCountdown.gd" id="3_resumeradial_script"]
+[ext_resource type="Script" uid="uid://dag2tkpylrfey" path="res://scripts/HudHeatMapIndicators.gd" id="4_heatmap_script"]
 
 [sub_resource type="Gradient" id="Gradient_boss_fill"]
 colors = PackedColorArray(0.81960785, 0, 0, 1, 0.9490196, 0, 0, 1)
@@ -18,10 +13,54 @@ gradient = SubResource("Gradient_boss_fill")
 width = 16
 height = 16
 
+[sub_resource type="Gradient" id="Gradient_boss_under"]
+colors = PackedColorArray(0, 0, 0, 0.85882354, 0, 0, 0, 0.8784314)
+
+[sub_resource type="GradientTexture2D" id="Texture_under"]
+gradient = SubResource("Gradient_boss_under")
+width = 16
+height = 16
+
+[sub_resource type="Gradient" id="Gradient_boss_hurt"]
+colors = PackedColorArray(1, 1, 1, 0.95, 1, 1, 1, 0.95)
+
+[sub_resource type="GradientTexture2D" id="Texture_hurt"]
+gradient = SubResource("Gradient_boss_hurt")
+width = 16
+height = 16
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1etfg"]
+bg_color = Color(0.09019608, 0.16078432, 0.25490198, 1)
+corner_radius_top_left = 32
+corner_radius_top_right = 32
+corner_radius_bottom_right = 32
+corner_radius_bottom_left = 32
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_perk_tooltip"]
+bg_color = Color(0.02, 0.03, 0.045, 0.92)
+content_margin_left = 12.0
+content_margin_top = 10.0
+content_margin_right = 12.0
+content_margin_bottom = 10.0
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
 [node name="HUD" type="CanvasLayer" unique_id=382090773]
 script = ExtResource("1_hud_script")
 
+[node name="HeatMapIndicators" type="Control" parent="." unique_id=382090774]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("4_heatmap_script")
+
 [node name="TopLeft" type="Control" parent="." unique_id=469696340]
+unique_name_in_owner = true
 layout_mode = 3
 anchors_preset = 0
 offset_left = 12.0
@@ -44,11 +83,35 @@ layout_mode = 2
 text = "HP"
 vertical_alignment = 1
 
-[node name="HPBar" type="ProgressBar" parent="TopLeft/VBox/HPRow" unique_id=982972357]
+[node name="PlayerHpBarStack" type="Control" parent="TopLeft/VBox/HPRow" unique_id=582972356]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(140, 16)
 layout_mode = 2
-value = 5.0
+
+[node name="PlayerHpHurtBar" type="ProgressBar" parent="TopLeft/VBox/HPRow/PlayerHpBarStack" unique_id=682972358]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+max_value = 250.0
+value = 250.0
+show_percentage = false
+
+[node name="HPBar" type="ProgressBar" parent="TopLeft/VBox/HPRow/PlayerHpBarStack" unique_id=982972357]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+max_value = 250.0
+value = 250.0
 show_percentage = false
 
 [node name="HPText" type="Label" parent="TopLeft/VBox/HPRow" unique_id=183967287]
@@ -57,15 +120,36 @@ layout_mode = 2
 text = "5 / 5"
 vertical_alignment = 1
 
-[node name="LivesText" type="Label" parent="TopLeft/VBox" unique_id=656139498]
+[node name="LivesIcons" type="HBoxContainer" parent="TopLeft/VBox" unique_id=656139498]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Lives: 3"
+theme_override_constants/separation = 6
 
-[node name="WaveText" type="Label" parent="TopLeft/VBox" unique_id=1042425714]
+[node name="LevelLabel" type="Label" parent="TopLeft/VBox" unique_id=656139500]
 unique_name_in_owner = true
 layout_mode = 2
-text = "Wave: 1"
+theme_override_font_sizes/font_size = 16
+text = "Level: 0"
+
+[node name="ScoreLabel" type="Label" parent="TopLeft/VBox" unique_id=656139499]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Score: 0"
+
+[node name="MetaXpBar" type="Control" parent="." unique_id=905983000]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 120.0
+offset_right = 24.0
+offset_bottom = -72.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("2_xpbar_script")
 
 [node name="BossBanner" type="Label" parent="." unique_id=705982589]
 unique_name_in_owner = true
@@ -83,6 +167,25 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_font_sizes/font_size = 32
 text = "BOSS WAVE"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WaveCenterText" type="Label" parent="." unique_id=905982589]
+unique_name_in_owner = true
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -28.0
+offset_right = 220.0
+offset_bottom = 28.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 42
+text = "WAVE 1"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -115,10 +218,30 @@ offset_right = -10.0
 offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 0
-value = 100.0
+value = 35.0
+fill_mode = 6
+nine_patch_stretch = true
+texture_progress = SubResource("Texture_progress")
+
+[node name="BossHpHurtBar" type="TextureProgressBar" parent="." unique_id=2031342481]
+unique_name_in_owner = true
+visible = false
+z_index = -1
+custom_minimum_size = Vector2(0, 8)
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+value = 60.0
+fill_mode = 6
 nine_patch_stretch = true
 texture_under = SubResource("Texture_under")
-texture_progress = SubResource("Texture_progress")
+texture_progress = SubResource("Texture_hurt")
 
 [node name="GameOverPanel" type="ColorRect" parent="." unique_id=306605988]
 unique_name_in_owner = true
@@ -136,9 +259,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -220.0
-offset_top = -80.0
+offset_top = -190.0
 offset_right = 220.0
-offset_bottom = 80.0
+offset_bottom = 190.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 12
@@ -150,11 +273,68 @@ theme_override_font_sizes/font_size = 42
 text = "GAME OVER"
 horizontal_alignment = 1
 
+[node name="WaveReachedText" type="Label" parent="GameOverPanel/CenterBox" unique_id=1206855474]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Wave reached: 1"
+horizontal_alignment = 1
+
+[node name="GameOverLevelText" type="Label" parent="GameOverPanel/CenterBox" unique_id=1206855476]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Level: 0"
+horizontal_alignment = 1
+
+[node name="GameOverPerkCountText" type="Label" parent="GameOverPanel/CenterBox" unique_id=1206855477]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Perks picked: 0"
+horizontal_alignment = 1
+
+[node name="GameOverMetaScroll" type="ScrollContainer" parent="GameOverPanel/CenterBox" unique_id=1837462951]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 132)
+layout_mode = 2
+size_flags_horizontal = 3
+horizontal_scroll_mode = 0
+
+[node name="GameOverPerkList" type="VBoxContainer" parent="GameOverPanel/CenterBox/GameOverMetaScroll" unique_id=-1346393234]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="GameOverScoreText" type="Label" parent="GameOverPanel/CenterBox" unique_id=1206855475]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Score: 0"
+horizontal_alignment = 1
+
 [node name="RestartText" type="Label" parent="GameOverPanel/CenterBox" unique_id=388180757]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Press Spacebar to play again"
 horizontal_alignment = 1
+
+[node name="GameOverPerkTooltip" type="PanelContainer" parent="GameOverPanel" unique_id=-1346393233]
+unique_name_in_owner = true
+visible = false
+top_level = true
+layout_mode = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_perk_tooltip")
+
+[node name="TooltipLabel" type="Label" parent="GameOverPanel/GameOverPerkTooltip" unique_id=-1346393232]
+unique_name_in_owner = true
+modulate = Color(0.95, 0.96, 0.98, 1)
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
 
 [node name="PausePanel" type="ColorRect" parent="." unique_id=1817282747]
 unique_name_in_owner = true
@@ -162,8 +342,55 @@ visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-mouse_filter = 2
 color = Color(0, 0, 0, 0.62)
+
+[node name="PausePerkPanel" type="PanelContainer" parent="PausePanel" unique_id=1933075174]
+unique_name_in_owner = true
+layout_mode = 0
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 18.0
+offset_top = -190.0
+offset_right = 330.0
+offset_bottom = 190.0
+grow_vertical = 2
+
+[node name="PausePerkVBox" type="VBoxContainer" parent="PausePanel/PausePerkPanel" unique_id=1933075175]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PausePerkTitle" type="Label" parent="PausePanel/PausePerkPanel/PausePerkVBox" unique_id=1933075176]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Perks"
+horizontal_alignment = 1
+
+[node name="PausePerkScroll" type="ScrollContainer" parent="PausePanel/PausePerkPanel/PausePerkVBox" unique_id=1933075177]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="PausePerkList" type="VBoxContainer" parent="PausePanel/PausePerkPanel/PausePerkVBox/PausePerkScroll" unique_id=1933075178]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="PausePerkTooltip" type="PanelContainer" parent="PausePanel" unique_id=1933075179]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_perk_tooltip")
+
+[node name="PausePerkTooltipLabel" type="Label" parent="PausePanel/PausePerkTooltip" unique_id=1933075180]
+unique_name_in_owner = true
+modulate = Color(0.95, 0.96, 0.98, 1)
+custom_minimum_size = Vector2(280, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
 
 [node name="PauseCenterBox" type="VBoxContainer" parent="PausePanel" unique_id=832497265]
 layout_mode = 0
@@ -188,11 +415,157 @@ text = "PAUSED"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="PauseHintText" type="Label" parent="PausePanel/PauseCenterBox" unique_id=1933075181]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Press Escape to resume"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ResumeRadial" type="Control" parent="PausePanel/PauseCenterBox" unique_id=1933075153]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(240, 240)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("3_resumeradial_script")
+
+[node name="PauseSettingsButton" type="Button" parent="PausePanel/PauseCenterBox" unique_id=1933075154]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(260, 44)
+layout_mode = 2
+text = "Settings"
+
 [node name="PauseQuitButton" type="Button" parent="PausePanel/PauseCenterBox" unique_id=1813727349]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(260, 44)
 layout_mode = 2
 text = "Quit to Main Menu"
+
+[node name="PauseSettingsModalBlocker" type="ColorRect" parent="PausePanel" unique_id=1933075169]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0)
+
+[node name="PauseSettingsPanel" type="Panel" parent="PausePanel" unique_id=1933075155]
+unique_name_in_owner = true
+visible = false
+z_index = 1
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -200.0
+offset_right = 280.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1etfg")
+
+[node name="PauseSettingsMargin" type="MarginContainer" parent="PausePanel/PauseSettingsPanel" unique_id=1933075156]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = -16.0
+
+[node name="PauseSettingsVBox" type="VBoxContainer" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin" unique_id=1933075157]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="PauseSettingsTitle" type="Label" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox" unique_id=1933075158]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Settings"
+horizontal_alignment = 1
+
+[node name="PauseMusicRow" type="HBoxContainer" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox" unique_id=1933075159]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PauseMusicLabel" type="Label" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox/PauseMusicRow" unique_id=1933075160]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Music Volume"
+
+[node name="PauseMusicSlider" type="HSlider" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox/PauseMusicRow" unique_id=1933075161]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 0.8
+
+[node name="PauseMusicValue" type="Label" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox/PauseMusicRow" unique_id=1933075162]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+text = "80%"
+horizontal_alignment = 2
+
+[node name="PauseSfxRow" type="HBoxContainer" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox" unique_id=1933075163]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PauseSfxLabel" type="Label" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox/PauseSfxRow" unique_id=1933075164]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "SFX Volume"
+
+[node name="PauseSfxSlider" type="HSlider" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox/PauseSfxRow" unique_id=1933075165]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1.0
+step = 0.01
+value = 0.8
+
+[node name="PauseSfxValue" type="Label" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox/PauseSfxRow" unique_id=1933075166]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(56, 0)
+layout_mode = 2
+text = "80%"
+horizontal_alignment = 2
+
+[node name="PauseAutoShootButton" type="Button" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox" unique_id=1933075167]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Automatic Shooting: Off"
+
+[node name="PauseFocusModeButton" type="Button" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox" unique_id=1933075173]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Focus Mode: Off"
+
+[node name="PauseUnpauseDelayRow" type="HBoxContainer" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox" unique_id=1933075170]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PauseUnpauseDelayLabel" type="Label" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox/PauseUnpauseDelayRow" unique_id=1933075171]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Unpause Delay"
+
+[node name="PauseUnpauseDelayOption" type="OptionButton" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox/PauseUnpauseDelayRow" unique_id=1933075172]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PauseSettingsCloseButton" type="Button" parent="PausePanel/PauseSettingsPanel/PauseSettingsMargin/PauseSettingsVBox" unique_id=1933075168]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "Back"
 
 [node name="PerkChoicePanel" type="ColorRect" parent="." unique_id=368821010]
 unique_name_in_owner = true

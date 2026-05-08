@@ -6,6 +6,10 @@ class_name EnemySpawner
 @export var inter_wave_delay: float = 2.0
 @export var boss_every_n_waves: int = 7
 @export_range(0.0, 1.0) var boss_enemy_amount: float = 0.35
+## Enemy max HP is multiplied by this raised to `(wave - 1)` (wave 1 unchanged). Default 1.05 (~5% more HP per wave, compound).
+@export var enemy_hp_wave_scale_factor: float = 1.05
+## Additive scaling for damage enemies deal to the player: multiplier = `1 + this * (wave - 1)` (wave 1 unchanged).
+@export var enemy_damage_additive_per_wave: float = 0.05
 
 @export var tank_spawn_chance: float = 0.22
 @export var speedster_spawn_chance: float = 0.3
@@ -22,6 +26,8 @@ class_name EnemySpawner
 @export var path_trace_speed_threshold: float = 300.0
 
 signal wave_started(wave_number: int, enemy_target: int, is_boss_wave: bool)
+## Emitted once all enemies from the wave are defeated (before inter-wave delay).
+signal wave_completed(wave_number: int)
 signal boss_spawned(boss: EnemyBoss)
 
 var playfield_rect: Rect2
@@ -29,6 +35,9 @@ var enemy_scene: PackedScene
 var tank_enemy_scene: PackedScene
 var speedster_enemy_scene: PackedScene
 var boss_scene: PackedScene
+## Alternates with `boss_scene` when boss waves spawn (same paths / tuning).
+var siege_boss_scene: PackedScene
+@export_range(0.0, 1.0) var siege_boss_spawn_chance: float = 0.48
 var enemy_parent: Node
 var enemy_bullet_scene: PackedScene
 var enemy_bullet_parent: Node
@@ -109,6 +118,7 @@ func _process(delta: float) -> void:
 	if _spawned_this_wave >= _wave_enemy_target() and _alive_this_wave <= 0:
 		_wave_in_progress = false
 		_inter_wave_t = 0.0
+		wave_completed.emit(_current_wave)
 
 
 func _start_next_wave() -> void:
@@ -123,6 +133,18 @@ func _start_next_wave() -> void:
 	_wave_in_progress = true
 	_build_wave_spawn_plan()
 	wave_started.emit(_current_wave, _wave_enemy_target(), _is_boss_wave())
+
+
+func _enemy_hp_multiplier_for_wave(wave: int) -> float:
+	if wave < 1:
+		return 1.0
+	return pow(enemy_hp_wave_scale_factor, float(wave - 1))
+
+
+func _enemy_damage_multiplier_for_wave(wave: int) -> float:
+	if wave < 1:
+		return 1.0
+	return 1.0 + enemy_damage_additive_per_wave * float(wave - 1)
 
 
 func _non_boss_enemy_count_for_wave(wave: int) -> int:
@@ -290,6 +312,17 @@ func _spawn_enemy_on_path(scene_packed: PackedScene, path: Path2D, along_offset:
 	var e: EnemyBasic = scene_packed.instantiate() as EnemyBasic
 	if e == null:
 		return
+	# After wave 10, chance is 5(x-10)% where x is wave number (wave 11 = 5%, 12 = 10%, ...).
+	var wave_bullet_chance: float = 0.0
+	if _current_wave > 10:
+		wave_bullet_chance = clampf(0.05 * float(_current_wave - 10), 0.0, 1.0)
+	if wave_bullet_chance > 0.0001 and _rng.randf() < wave_bullet_chance:
+		e.use_wave_bullets = true
+	var hp_mult: float = _enemy_hp_multiplier_for_wave(_current_wave)
+	var dmg_mult: float = _enemy_damage_multiplier_for_wave(_current_wave)
+	e.hp *= hp_mult
+	e.bullet_damage *= dmg_mult
+	e.body_damage_to_player *= dmg_mult
 	enemy_parent.add_child(e)
 	e.tree_exited.connect(_on_enemy_exited)
 	_spawned_this_wave += 1
@@ -312,16 +345,33 @@ func _spawn_enemy_on_path(scene_packed: PackedScene, path: Path2D, along_offset:
 
 
 func _spawn_boss_with_path() -> void:
-	if enemy_parent == null or boss_scene == null:
+	if enemy_parent == null:
+		return
+	var chosen_scene: PackedScene = boss_scene
+	if chosen_scene == null:
+		chosen_scene = siege_boss_scene
+	elif siege_boss_scene != null and _rng.randf() < clampf(siege_boss_spawn_chance, 0.0, 1.0):
+		chosen_scene = siege_boss_scene
+	if chosen_scene == null:
 		return
 	var path: Path2D = EnemyPathLibrary.pick_random_boss_path(boss_paths_root, _rng)
 	if path == null:
 		push_error("EnemySpawner: no Path_Boss_* Path2D nodes found under boss_paths_root.")
 		return
 
-	var b: EnemyBoss = boss_scene.instantiate() as EnemyBoss
+	var b: EnemyBoss = chosen_scene.instantiate() as EnemyBoss
 	if b == null:
 		return
+	var hp_mult_b: float = _enemy_hp_multiplier_for_wave(_current_wave)
+	var dmg_mult_b: float = _enemy_damage_multiplier_for_wave(_current_wave) * 1.5
+	b.max_hp *= hp_mult_b
+	b.normal_bullet_damage *= dmg_mult_b
+	b.tank_bullet_damage *= dmg_mult_b
+	b.body_damage_to_player *= dmg_mult_b
+	if b is EnemySiegeBoss:
+		var sb: EnemySiegeBoss = b as EnemySiegeBoss
+		sb.laser_damage_per_tick *= dmg_mult_b
+		sb.explosion_damage *= dmg_mult_b
 	b.playfield_rect = playfield_rect
 	b.bullet_scene = enemy_bullet_scene
 	b.bullet_parent = enemy_bullet_parent

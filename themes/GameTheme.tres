@@ -1,0 +1,6 @@
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://c0j2m9h8v8d1q"]
+
+[ext_resource type="FontFile" path="res://Assets/rostex.regular.ttf" id="1_font"]
+
+[resource]
+default_font = ExtResource("1_font")

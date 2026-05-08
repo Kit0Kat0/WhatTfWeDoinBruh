@@ -162,7 +162,7 @@ static func _build_enemy_path(rect: Rect2, variant: int) -> Curve2D:
 	var w: float = rect.size.x
 	var h: float = rect.size.y
 	var m: float = 72.0
-	match variant % 6:
+	match variant % 14:
 		0:
 			_add_bezier_chain(c, [
 				Vector2(ox + w * 0.15, oy - m * 1.25),
@@ -208,7 +208,7 @@ static func _build_enemy_path(rect: Rect2, variant: int) -> Curve2D:
 				Vector2(ox + w + m * 0.35, oy + h * 0.42),
 				Vector2(ox + w * 0.72, oy - m * 1.05),
 			])
-		_:
+		5:
 			_add_bezier_chain(c, [
 				Vector2(ox + w * 0.25, oy - m * 1.25),
 				Vector2(ox + w * 0.7, oy + h * 0.15),
@@ -216,6 +216,78 @@ static func _build_enemy_path(rect: Rect2, variant: int) -> Curve2D:
 				Vector2(ox + w * 0.18, oy + h * 0.65),
 				Vector2(ox - m * 0.35, oy + h * 0.78),
 				Vector2(ox + w * 0.4, oy - m * 1.05),
+			])
+		6:
+			_add_bezier_chain(c, [
+				Vector2(ox - m * 0.65, oy - m * 1.25),
+				Vector2(ox + w * 0.42, oy + h * 0.18),
+				Vector2(ox + w * 0.68, oy + h * 0.48),
+				Vector2(ox + w * 0.52, oy + h * 0.82),
+				Vector2(ox + w + m * 0.55, oy + h * 0.62),
+				Vector2(ox + w * 0.22, oy - m * 1.05),
+			])
+		7:
+			_add_bezier_chain(c, [
+				Vector2(ox + w + m * 0.7, oy - m * 1.25),
+				Vector2(ox + w * 0.62, oy + h * 0.22),
+				Vector2(ox + w * 0.35, oy + h * 0.52),
+				Vector2(ox + w * 0.55, oy + h * 0.76),
+				Vector2(ox - m * 0.45, oy + h * 0.58),
+				Vector2(ox + w * 0.78, oy - m * 1.05),
+			])
+		8:
+			_add_bezier_chain(c, [
+				Vector2(ox + w * 0.92, oy - m * 1.4),
+				Vector2(ox + w * 0.72, oy + h * 0.35),
+				Vector2(ox + w * 0.28, oy + h * 0.42),
+				Vector2(ox + w * 0.82, oy + h * 0.58),
+				Vector2(ox + w * 0.18, oy + h + m * 0.55),
+				Vector2(ox + w * 0.65, oy - m * 1.0),
+			])
+		9:
+			_add_bezier_chain(c, [
+				Vector2(ox + w * 0.08, oy - m * 1.3),
+				Vector2(ox + w * 0.35, oy + h * 0.42),
+				Vector2(ox + w * 0.62, oy + h * 0.38),
+				Vector2(ox + w * 0.22, oy + h * 0.22),
+				Vector2(ox + w * 0.78, oy - m * 0.85),
+				Vector2(ox + w * 0.48, oy - m * 1.05),
+			])
+		10:
+			_add_bezier_chain(c, [
+				Vector2(ox + w * 0.45, oy - m * 1.45),
+				Vector2(ox + w * 0.18, oy + h * 0.28),
+				Vector2(ox + w * 0.82, oy + h * 0.35),
+				Vector2(ox + w * 0.15, oy + h * 0.62),
+				Vector2(ox + w * 0.88, oy + h * 0.72),
+				Vector2(ox + w * 0.42, oy - m * 1.0),
+			])
+		11:
+			_add_bezier_chain(c, [
+				Vector2(ox + w * 0.55, oy - m * 1.35),
+				Vector2(ox + w * 0.62, oy + h * 0.32),
+				Vector2(ox + w * 0.22, oy + h * 0.48),
+				Vector2(ox + w * 0.72, oy + h * 0.28),
+				Vector2(ox + w * 0.38, oy - m * 1.15),
+				Vector2(ox + w * 0.58, oy - m * 1.05),
+			])
+		12:
+			_add_bezier_chain(c, [
+				Vector2(ox + w * 0.72, oy - m * 1.3),
+				Vector2(ox + w * 0.58, oy + h * 0.38),
+				Vector2(ox + w * 0.42, oy + h * 0.78),
+				Vector2(ox + w * 0.88, oy + h * 0.38),
+				Vector2(ox + w * 0.12, oy + h * 0.18),
+				Vector2(ox + w * 0.68, oy - m * 1.05),
+			])
+		13:
+			_add_bezier_chain(c, [
+				Vector2(ox - m * 0.35, oy - m * 1.25),
+				Vector2(ox + w * 0.55, oy + h * 0.38),
+				Vector2(ox + w * 0.35, oy + h * 0.35),
+				Vector2(ox + w * 0.68, oy + h * 0.22),
+				Vector2(ox + w + m * 0.25, oy + h * 0.52),
+				Vector2(ox + w * 0.08, oy - m * 1.05),
 			])
 	return c
 
@@ -227,7 +299,7 @@ static func _build_split_path(rect: Rect2, _group_key: String, index_in_group: i
 	var w: float = rect.size.x
 	var h: float = rect.size.y
 	var m: float = 64.0
-	match index_in_group % 3:
+	match index_in_group % 7:
 		0:
 			_add_bezier_chain(c, [
 				Vector2(ox - m * 0.45, oy - m * 1.2),
@@ -246,13 +318,49 @@ static func _build_split_path(rect: Rect2, _group_key: String, index_in_group: i
 				Vector2(ox + w * 0.5, oy + h * 0.18),
 				Vector2(ox + w * 0.5, oy - m * 1.05),
 			])
-		_:
+		2:
 			_add_bezier_chain(c, [
 				Vector2(ox + w + m * 0.5, oy - m * 1.2),
 				Vector2(ox + w * 0.78, oy + h * 0.22),
 				Vector2(ox + w * 0.62, oy + h * 0.52),
 				Vector2(ox + w * 0.88, oy + h + m * 0.65),
 				Vector2(ox + w * 0.42, oy + h * 0.4),
+				Vector2(ox + w * 0.92, oy - m * 1.05),
+			])
+		3:
+			_add_bezier_chain(c, [
+				Vector2(ox + w * 0.35, oy - m * 1.35),
+				Vector2(ox + w * 0.28, oy + h * 0.35),
+				Vector2(ox + w * 0.72, oy + h * 0.42),
+				Vector2(ox + w * 0.18, oy + h * 0.72),
+				Vector2(ox + w * 0.82, oy + h + m * 0.45),
+				Vector2(ox + w * 0.42, oy - m * 1.0),
+			])
+		4:
+			_add_bezier_chain(c, [
+				Vector2(ox + w * 0.72, oy - m * 1.25),
+				Vector2(ox + w * 0.62, oy + h * 0.22),
+				Vector2(ox + w * 0.22, oy + h * 0.52),
+				Vector2(ox + w * 0.78, oy + h * 0.62),
+				Vector2(ox + w * 0.15, oy + h + m * 0.55),
+				Vector2(ox + w * 0.68, oy - m * 1.08),
+			])
+		5:
+			_add_bezier_chain(c, [
+				Vector2(ox - m * 0.55, oy - m * 1.25),
+				Vector2(ox + w * 0.42, oy + h * 0.22),
+				Vector2(ox + w * 0.58, oy + h * 0.58),
+				Vector2(ox + w * 0.32, oy + h + m * 0.75),
+				Vector2(ox + w * 0.72, oy + h * 0.38),
+				Vector2(ox + w * 0.08, oy - m * 1.05),
+			])
+		_:
+			_add_bezier_chain(c, [
+				Vector2(ox + w + m * 0.35, oy - m * 1.25),
+				Vector2(ox + w * 0.58, oy + h * 0.22),
+				Vector2(ox + w * 0.38, oy + h * 0.62),
+				Vector2(ox + w * 0.72, oy + h + m * 0.82),
+				Vector2(ox + w * 0.22, oy + h * 0.45),
 				Vector2(ox + w * 0.92, oy - m * 1.05),
 			])
 	return c
@@ -266,12 +374,45 @@ static func _build_boss_path(rect: Rect2, variant: int) -> Curve2D:
 	var h: float = rect.size.y
 	var margin: float = 100.0
 	var cx: float = ox + w * 0.5
-	var cy: float = oy + h * (0.27 if variant % 2 == 0 else 0.33)
-	var rx: float = maxf(80.0, (w - margin * 2.0) * 0.31)
-	var ry: float = maxf(48.0, (h - margin * 2.0) * 0.15)
+	var v: int = variant % 6
+	var cy_ratio: float = 0.27
+	var phase: float = 0.0
+	var rx_mul: float = 1.0
+	var ry_mul: float = 1.0
+	match v:
+		0:
+			cy_ratio = 0.27
+			phase = 0.0
+		1:
+			cy_ratio = 0.33
+			phase = PI * 0.35
+		2:
+			cy_ratio = 0.29
+			phase = PI * 0.68
+			rx_mul = 1.08
+		3:
+			cy_ratio = 0.31
+			phase = PI * 1.05
+			ry_mul = 1.12
+		4:
+			cy_ratio = 0.25
+			phase = PI * 0.18
+			rx_mul = 0.92
+			ry_mul = 1.08
+		_:
+			cy_ratio = 0.35
+			phase = PI * 0.92
+			rx_mul = 1.05
+	var cy: float = oy + h * cy_ratio
+	var rx: float = maxf(80.0, (w - margin * 2.0) * 0.31) * rx_mul
+	var ry: float = maxf(48.0, (h - margin * 2.0) * 0.15) * ry_mul
+	# Keep bosses entirely on-screen and out of the bottom half.
+	var top_cap: float = oy + h * 0.12
+	var bottom_cap: float = oy + h * 0.48
+	cy = clampf(cy, top_cap + 24.0, bottom_cap - 24.0)
+	ry = minf(ry, maxf(24.0, bottom_cap - cy))
 	var entry: Vector2 = Vector2(cx, oy + margin * 0.55)
-	# Oval loop; phase shift per variant so two boss paths feel different.
-	var phase: float = 0.0 if variant % 2 == 0 else PI * 0.35
+	# Oval loop; phase / ellipse tweak per variant so boss paths feel distinct.
 	var steps: int = 36
 	var first_loop: Vector2 = Vector2(cx + cos(-PI * 0.5 + phase) * rx, cy + sin(-PI * 0.5 + phase) * ry)
 	c.add_point(entry, Vector2.ZERO, Vector2(0.0, 90.0))

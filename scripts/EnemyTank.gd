@@ -7,6 +7,8 @@ class_name EnemyTank
 func _fire_forward() -> void:
 	if bullet_scene == null or bullet_parent == null:
 		return
+	if VirusHunterGame.jammer_blocks_enemy_volley(get_tree(), false, _rng):
+		return
 
 	var spread_radians: float = deg_to_rad(spread_angle_degrees)
 	var dirs: Array[Vector2] = [
@@ -19,6 +21,7 @@ func _fire_forward() -> void:
 		var b: BulletEnemy = bullet_scene.instantiate() as BulletEnemy
 		if b == null:
 			continue
+		b.scale_factor = bullet_size_scale
 		bullet_parent.add_child(b)
 		b.global_position = global_position
 		b.velocity = d * bullet_speed

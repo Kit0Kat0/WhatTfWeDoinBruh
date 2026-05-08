@@ -22,6 +22,9 @@ var hp: float = 1600.0
 ## Three-way spread volleys (tanky-style): slower, harder-hitting.
 @export var tank_bullet_speed: float = 200.0
 @export var tank_bullet_damage: float = 30.0
+## Damage dealt when the boss overlaps the player (body hit).
+@export var body_damage_to_player: float = 10.0
+@export var bullet_size_scale: float = 0.65
 @export var tank_spread_angle_degrees: float = 14.0
 @export var follow_path_rotation: bool = false
 @export var damage_flash_duration_sec: float = 0.1
@@ -33,8 +36,8 @@ var playfield_rect: Rect2
 var bullet_scene: PackedScene
 var bullet_parent: Node
 var path_motion: EnemyPathMotion
-
 var _fire_cooldown: float = 0.0
+
 var _pattern_volley: int = 0
 var _damage_flash_remaining: float = 0.0
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
@@ -228,19 +231,21 @@ func _process(delta: float) -> void:
 func _fire_mixed_pattern_volley() -> void:
 	if bullet_scene == null or bullet_parent == null:
 		return
-
-	if _pattern_volley % 2 == 0:
-		_fire_normal_forward()
-	else:
-		_fire_tanky_spread()
+	var jammed: bool = VirusHunterGame.jammer_blocks_enemy_volley(get_tree(), true, _rng)
+	if not jammed:
+		if _pattern_volley % 2 == 0:
+			_fire_normal_forward()
+		else:
+			_fire_tanky_spread()
+		AudioManager.play_sfx("boss_shot")
 	_pattern_volley += 1
-	AudioManager.play_sfx("boss_shot")
 
 
 func _fire_normal_forward() -> void:
 	var b: BulletEnemy = bullet_scene.instantiate() as BulletEnemy
 	if b == null:
 		return
+	b.scale_factor = bullet_size_scale
 	bullet_parent.add_child(b)
 	b.global_position = global_position + Vector2(0.0, radius * 0.35)
 	b.velocity = Vector2.DOWN * normal_bullet_speed
@@ -258,10 +263,47 @@ func _fire_tanky_spread() -> void:
 		var b: BulletEnemy = bullet_scene.instantiate() as BulletEnemy
 		if b == null:
 			continue
+		b.scale_factor = bullet_size_scale
 		bullet_parent.add_child(b)
 		b.global_position = global_position + d * (radius * 0.35)
 		b.velocity = d * tank_bullet_speed
 		b.damage = maxf(1.0, tank_bullet_damage)
+
+
+func get_max_hp_snapshot() -> float:
+	return max_hp
+
+
+func apply_chain_explosion_damage(amount: float) -> void:
+	if amount <= 0.0 or hp <= 0.0:
+		return
+	hp -= amount
+	if hp <= 0.0:
+		_die_boss(true)
+	else:
+		health_changed.emit(hp, max_hp)
+		_damage_flash_remaining = damage_flash_duration_sec
+		_kick_hit_shake(maxf(1.0, amount) * 0.02)
+		_sync_visuals()
+		if int(hp) % 50 == 0:
+			AudioManager.play_sfx("boss_hit")
+
+
+func _die_boss(from_chain_explosion: bool) -> void:
+	hp = 0
+	health_changed.emit(hp, max_hp)
+	_spawn_death_particles()
+	AudioManager.play_sfx("boss_death")
+	AudioManager.duck_music(6.0, 0.3, 0.7)
+	if not from_chain_explosion:
+		var g_drop: VirusHunterGame = VirusHunterGame.find_game(get_tree())
+		if g_drop != null:
+			g_drop.try_spawn_weapon_pickup(global_position, true)
+			g_drop.try_spawn_health_pickup(global_position, true)
+	var g: VirusHunterGame = VirusHunterGame.find_game(get_tree())
+	if g != null:
+		g.on_enemy_defeated(self, from_chain_explosion)
+	queue_free()
 
 
 func apply_beam_damage(amount: float) -> void:
@@ -269,15 +311,7 @@ func apply_beam_damage(amount: float) -> void:
 		return
 	hp -= amount
 	if hp <= 0:
-		hp = 0
-		health_changed.emit(hp, max_hp)
-		AudioManager.play_sfx("boss_death")
-		AudioManager.duck_music(6.0, 0.3, 0.7)
-		for n in get_tree().get_nodes_in_group("game_controller"):
-			if n.has_method("try_spawn_weapon_pickup"):
-				n.call("try_spawn_weapon_pickup", global_position, true)
-				break
-		queue_free()
+		_die_boss(false)
 	else:
 		health_changed.emit(hp, max_hp)
 		_damage_flash_remaining = damage_flash_duration_sec
@@ -295,15 +329,7 @@ func _on_area_entered(area: Area2D) -> void:
 			dmg = maxf(1.0, pb.damage)
 		hp -= dmg
 		if hp <= 0:
-			hp = 0
-			health_changed.emit(hp, max_hp)
-			AudioManager.play_sfx("boss_death")
-			AudioManager.duck_music(6.0, 0.3, 0.7)
-			for n in get_tree().get_nodes_in_group("game_controller"):
-				if n.has_method("try_spawn_weapon_pickup"):
-					n.call("try_spawn_weapon_pickup", global_position, true)
-					break
-			queue_free()
+			_die_boss(false)
 		else:
 			health_changed.emit(hp, max_hp)
 			_damage_flash_remaining = damage_flash_duration_sec
@@ -348,3 +374,50 @@ func _update_hit_shake(delta: float) -> void:
 	if _hit_shake_time_left <= 0.0:
 		_hit_shake_strength_px_live = 0.0
 		_hit_shake_duration = 0.0
+
+
+func _spawn_death_particles() -> void:
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	var burst_root := Node2D.new()
+	parent.add_child(burst_root)
+	burst_root.global_position = global_position
+
+	var p := CPUParticles2D.new()
+	burst_root.add_child(p)
+	var c: Color = _palette_base_color()
+	p.emitting = true
+	p.one_shot = true
+	p.amount = 160
+	# Stagger emission so particles don't all die at once (looks like a pop).
+	p.lifetime = 1.1
+	p.explosiveness = 0.12
+	p.randomness = 0.95
+	p.local_coords = false
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_POINT
+	p.gravity = Vector2.ZERO
+	p.direction = Vector2.UP
+	p.spread = 180.0
+	p.initial_velocity_min = 80.0
+	p.initial_velocity_max = 260.0
+	p.scale_amount_min = 1.8
+	p.scale_amount_max = 5.0
+	p.color = c
+
+	var grad: Gradient = Gradient.new()
+	# Gradients always keep at least 2 points; normalize then edit.
+	while grad.get_point_count() > 2:
+		grad.remove_point(grad.get_point_count() - 1)
+	grad.set_color(0, Color(c.r, c.g, c.b, 0.95))
+	grad.set_offset(0, 0.0)
+	grad.set_color(1, Color(c.r, c.g, c.b, 0.0))
+	grad.set_offset(1, 1.0)
+	grad.add_point(0.4, Color(c.r, c.g, c.b, 0.55))
+	p.color_ramp = grad
+
+	# Give the ramp time to fully fade before freeing.
+	get_tree().create_timer(p.lifetime + 0.95).timeout.connect(func() -> void:
+		if is_instance_valid(burst_root):
+			burst_root.queue_free()
+	)

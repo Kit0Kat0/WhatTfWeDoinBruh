@@ -1,7 +1,17 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene format=3 uid="uid://c3wthcojxcwg2"]
 
-[ext_resource type="Script" path="res://scripts/BulletEnemy.gd" id="1_bullet_enemy_script"]
-[ext_resource type="Texture2D" path="res://Assets/Effect and FX Pixel All Free/Free/Part 1/03.png" id="2_fx_sheet"]
+[ext_resource type="Script" uid="uid://k6agrb0m5hlj" path="res://scripts/BulletEnemy.gd" id="1_bullet_enemy_script"]
+[ext_resource type="Texture2D" uid="uid://s50armpypjvt" path="res://Assets/Effect and FX Pixel All Free/Free/Part 1/03.png" id="2_fx_sheet"]
+
+[sub_resource type="Gradient" id="Gradient_p5ua0"]
+interpolation_mode = 1
+offsets = PackedFloat32Array(0, 0.4702941)
+colors = PackedColorArray(0, 0, 0, 1, 0, 0, 0, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_xks5i"]
+gradient = SubResource("Gradient_p5ua0")
+fill = 1
+fill_from = Vector2(0.5, 0.5)
 
 [sub_resource type="AtlasTexture" id="2_fx_cell"]
 atlas = ExtResource("2_fx_sheet")
@@ -10,17 +20,18 @@ region = Rect2(576, 0, 64, 64)
 [sub_resource type="CircleShape2D" id="1_circle"]
 radius = 5.0
 
-[node name="BulletEnemy" type="Area2D"]
+[node name="BulletEnemy" type="Area2D" unique_id=1365889029]
 collision_layer = 8
-collision_mask = 1
 script = ExtResource("1_bullet_enemy_script")
 
-[node name="Sprite" type="Sprite2D" parent="."]
-texture = SubResource("2_fx_cell")
-centered = true
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=317084533]
 scale = Vector2(0.55, 0.55)
+texture = SubResource("GradientTexture2D_xks5i")
+
+[node name="Sprite" type="Sprite2D" parent="." unique_id=260833534]
 self_modulate = Color(1, 0.55, 0.75, 1)
+scale = Vector2(0.55, 0.55)
+texture = SubResource("2_fx_cell")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1612863550]
 shape = SubResource("1_circle")
-

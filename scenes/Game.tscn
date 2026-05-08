@@ -19,6 +19,22 @@ script = ExtResource("1_game_script")
 
 [node name="Path_Enemy_06" type="Path2D" parent="EnemyPaths" unique_id=1274804747]
 
+[node name="Path_Enemy_07" type="Path2D" parent="EnemyPaths" unique_id=1384729101]
+
+[node name="Path_Enemy_08" type="Path2D" parent="EnemyPaths" unique_id=2093847562]
+
+[node name="Path_Enemy_09" type="Path2D" parent="EnemyPaths" unique_id=3719284633]
+
+[node name="Path_Enemy_10" type="Path2D" parent="EnemyPaths" unique_id=4827364155]
+
+[node name="Path_Enemy_11" type="Path2D" parent="EnemyPaths" unique_id=5938172644]
+
+[node name="Path_Enemy_12" type="Path2D" parent="EnemyPaths" unique_id=6049283755]
+
+[node name="Path_Enemy_13" type="Path2D" parent="EnemyPaths" unique_id=7150394866]
+
+[node name="Path_Enemy_14" type="Path2D" parent="EnemyPaths" unique_id=8261405977]
+
 [node name="Path_SplitSetA_01" type="Path2D" parent="EnemyPaths" unique_id=115165850]
 
 [node name="Path_SplitSetA_02" type="Path2D" parent="EnemyPaths" unique_id=361868902]
@@ -34,3 +50,11 @@ script = ExtResource("1_game_script")
 [node name="Path_Boss_01" type="Path2D" parent="BossPaths" unique_id=1304457610]
 
 [node name="Path_Boss_02" type="Path2D" parent="BossPaths" unique_id=49760915]
+
+[node name="Path_Boss_03" type="Path2D" parent="BossPaths" unique_id=6148270388]
+
+[node name="Path_Boss_04" type="Path2D" parent="BossPaths" unique_id=7259381499]
+
+[node name="Path_Boss_05" type="Path2D" parent="BossPaths" unique_id=8360492510]
+
+[node name="Path_Boss_06" type="Path2D" parent="BossPaths" unique_id=9471603621]
