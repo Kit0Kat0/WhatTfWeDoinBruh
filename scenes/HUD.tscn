@@ -380,6 +380,8 @@ theme_override_constants/separation = 6
 [node name="PausePerkTooltip" type="PanelContainer" parent="PausePanel" unique_id=1933075179]
 unique_name_in_owner = true
 visible = false
+top_level = true
+z_index = 50
 layout_mode = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_perk_tooltip")
